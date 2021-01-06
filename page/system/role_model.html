@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>角色模板</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+<form class="layui-form layui-form-pane" action="">
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色名</label>
+        <div class="layui-input-inline">
+            <input type="text" id="name" name="name" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">所属产品</label>
+        <div class="layui-input-inline">
+            <div id="product_id"></div>
+<!--            <input type="text" name="" placeholder="请输入" autocomplete="off" class="layui-input" id="product_id">-->
+        </div>
+    </div>
+</form>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../js/lay-config.js" charset="utf-8"></script>
+<script src="../../js/public.js" charset="utf-8"></script>
+<script src="../../lib/xm-select/xm-select.js" charset="utf-8"></script>
+<script>
+    var id;
+    var select_product;
+
+    layui.use(['form', 'layer'], function () {
+        var form = layui.form;
+        var layer = layui.layer;
+
+        var url = 'http://localhost:8081/product/getProducts';
+        $.ajax({
+            url: url,
+            type: 'GET',
+            async: false,
+            headers: { token: token },
+            contentType: "application/json;charset=utf-8;",
+            success: function (d) {
+                var data = d.data;
+                if (d.success == true && d.data != "SYSTEM_ERROR") {
+                    var select = [];
+                    for (i = 0; i < data.length; i++) {
+                        var item = new Object();
+                        item.name = data[i].name;
+                        item.value = data[i].id;
+                        select.push(item);
+                    }
+                    select_product = xmSelect.render({
+                        el: '#product_id',
+                        filterable: true,
+                        theme: {color: '#1E9FFF'},
+                        data: select
+                    });
+                } else {
+                    layer.msg("产品列表请求失败");
+                }
+            },
+            error: function() {
+                window.parent.layui.layer.msg('登录过期，即将返回登录页面', function () {
+                    window.location = 'page/login-1.html';
+                });
+            }
+        });
+    });
+
+    function init(data) {
+        id = data.id;
+        $('#name').val(data.name);
+        select_product.setValue(data.productId.split(","));
+    }
+
+    function result() {
+        if (id) {
+            return {
+                id: id,
+                name: $('#name').val(),
+                productId: select_product.getValue('value').toString()
+            }
+        } else {
+            return {
+                name: $('#name').val(),
+                productId: select_product.getValue('value').toString()
+            }
+        }
+    }
+</script>
+</body>
+</html>
