@@ -14,7 +14,9 @@ function mAjax(data, url, type, success) {
         data: JSON.stringify(data),
         success: success,
         error: function() {
-            window.parent.layui.layer.msg('登录过期，即将返回登录页面', function () {
+            window.parent.layui.layer.msg('登录过期，即将返回登录页面', {
+                time: 1000  // 1秒关闭
+            }, function () {
                 window.location = 'page/login-1.html';
             });
         }
@@ -40,7 +42,9 @@ function mTable(dom, url, token, data, cols) {
         }
         ,parseData: function(res){ //将原始数据解析成 table 组件所规定的数据
             if(res.errorCode == 'U002') {
-                window.parent.layui.layer.msg('登录过期，即将返回登录页面', function () {
+                window.parent.layui.layer.msg('登录过期，即将返回登录页面', {
+                    time: 1000  // 1秒关闭
+                }, function () {
                     window.location = 'page/login-1.html';
                 });
                 return;

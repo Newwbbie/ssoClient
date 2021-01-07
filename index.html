@@ -152,7 +152,9 @@
         miniAdmin.render(options);
 
         $('.login-out').on("click", function () {
-            layer.msg('退出登录成功', function () {
+            layer.msg('退出登录成功', {
+                time: 1000  // 1秒关闭
+            }, function () {
                 window.location = 'page/login-1.html';
             });
         });

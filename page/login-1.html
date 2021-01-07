@@ -99,6 +99,9 @@
                 return false;
             }
 
+            layer.load(2, {
+                shade: [0.1, '#000']
+            });
             var data = {
                 "userName": data.username,
                 "password": data.password
@@ -112,6 +115,7 @@
                     if (d.data == 'SYSTEM_ERROR') {
                         console.log(data);
                         layer.msg("用户名或密码错误");
+                        layer.closeAll('loading');
                         return;
                     }
                     token = d.token;
@@ -134,6 +138,7 @@
                     // 本地存储
                     localStorage.setItem("token", token);
                     localStorage.setItem("user", data.userName);
+                    layer.closeAll('loading');
                     window.location = '../index.html';
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
