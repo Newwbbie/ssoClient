@@ -21,6 +21,9 @@
 <script src="../../js/lay-config.js" charset="utf-8"></script>
 <script src="../../js/public.js" charset="utf-8"></script>
 <script>
+
+    var insTb;
+
     layui.use(['layer', 'table', 'treeTable'], function () {
         var layer = layui.layer;
         var table = layui.table;
@@ -28,7 +31,7 @@
 
         renderTable = function(d, data) {
             // layer.load(2);
-            var insTb =  treeTable.render({
+            insTb =  treeTable.render({
                 elem: '#munu-table',
                 data: d,
                 tree: {
@@ -171,13 +174,15 @@
     // }
 
     function result() {
-        var data = layui.table.checkStatus('idTest').data;
+        var data = insTb.checkStatus();
         var ids = "";
         for (var i = 0; i < data.length; i++) {
-            if (i == 0) {
-                ids = data[0].id + "";
-            } else {
-                ids += "," + data[i].id;
+            if (data[i].is_menu == true) {
+                if (ids == "") {
+                    ids += data[i].id;
+                } else {
+                    ids += "," + data[i].id;
+                }
             }
         }
         return {
