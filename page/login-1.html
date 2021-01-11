@@ -137,12 +137,14 @@
                     });
                     // 本地存储
                     localStorage.setItem("token", token);
-                    localStorage.setItem("user", data.userName);
+                    localStorage.setItem("userId", d.id);
+                    localStorage.setItem("userName", d.name);
                     layer.closeAll('loading');
                     window.location = '../index.html';
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
                     console.log("XMLHttpRequest=" + XMLHttpRequest + ", textStatus=" + textStatus + ", errorThrown=" + errorThrown);
+                    layer.closeAll('loading');
                     layer.msg("登录失败");
                 }
             });

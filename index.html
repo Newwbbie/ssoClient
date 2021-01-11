@@ -136,7 +136,7 @@
             miniAdmin = layui.miniAdmin,
             miniTongji = layui.miniTongji;
 
-        $('.layuimini-setting > a').text(localStorage.getItem("user"));
+        $('.layuimini-setting > a').text(localStorage.getItem("userName"));
 
         var options = {
             iniUrl: "api/init.json",    // 初始化接口
@@ -155,6 +155,14 @@
             layer.msg('退出登录成功', {
                 time: 1000  // 1秒关闭
             }, function () {
+                // 清空账号session
+                $.ajax({
+                    url: 'http://localhost:8081/user/deleteSessionByUserId',
+                    type: 'DELETE',
+                    headers: { token: localStorage.getItem("token") },
+                    contentType: "application/json;charset=utf-8;",
+                    data: JSON.stringify({id: localStorage.getItem("userId")})
+                });
                 window.location = 'page/login-1.html';
             });
         });
