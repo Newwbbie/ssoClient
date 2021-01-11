@@ -21,10 +21,92 @@
 <script src="../../js/lay-config.js" charset="utf-8"></script>
 <script src="../../js/public.js" charset="utf-8"></script>
 <script>
-    layui.use(['layer', 'table', 'treetable'], function () {
+    layui.use(['layer', 'table', 'treeTable'], function () {
         var layer = layui.layer;
         var table = layui.table;
+        var treeTable = layui.treeTable;
+
+        renderTable = function(d, data) {
+            // layer.load(2);
+            var insTb =  treeTable.render({
+                elem: '#munu-table',
+                data: d,
+                tree: {
+                    iconIndex: 3,
+                    isPidData: true,
+                    idName: 'id',
+                    pidName: 'parent_id'
+                },
+                // treeSpid: -1,           // 最上级的父级id
+                treeLinkage: true,
+                page: false,
+                id: 'idTest',
+                cols: [[
+                    {field: 'id', type: 'checkbox', fixed: 'left'},
+                    {type: 'numbers'},
+                    {field: 'id', hide:true, width: 60, title: 'id'},
+                    {field: 'name', minWidth: 200, title: '权限名称'},
+                    {field: 'auth', title: '权限标识'},
+                    {
+                        field: 'is_menu', width: 80, align: 'center', templet: function (d) {
+                            if (d.is_menu == 1) {
+                                return '<span class="layui-badge layui-bg-gray">按钮</span>';
+                            }
+                            if (d.parent_id == -1) {
+                                return '<span class="layui-badge layui-bg-blue">目录</span>';
+                            } else {
+                                return '<span class="layui-badge-rim">菜单</span>';
+                            }
+                        }, title: '类型'
+                    }
+                ]],
+                // done: function (res, page, count) {
+                    // console.log(res)
+                    // layer.closeAll('loading');
+                    // for (var i = 0; i < res.data.length; i++) {
+                    //     for (var j = 0; j < data.length; j++) {
+                    //         if (res.data[i].id == data[j].id) {
+                    //             res.data[i]["LAY_CHECKED"] = 'true';
+                    //             var index= res.data[i]['LAY_TABLE_INDEX'];
+                    //             $('tr[data-index=' + index + '] input[type="checkbox"]').prop('checked', true);
+                    //             $('tr[data-index=' + index + '] input[type="checkbox"]').next().addClass('layui-form-checked');
+                    //             continue;
+                    //         }
+                    //     }
+                    // }
+                // }
+                done: function () {
+                    // treeTable.expandAll()
+                    console.log(treeTable)
+
+
+                    var tr = $("tr");
+                    if($("tr").length == (data.length + 1)) {
+                        $("tr .layui-unselect.layui-form-checkbox").addClass("layui-form-checked");
+                    }else {
+                        for (var i = 0; i < data.length; i++) {
+                            // d[i]["LAY_CHECKED"] = 'true';
+                            // var index = data[i]['LAY_TABLE_INDEX'];
+                            // $('tr input[type="checkbox"] ').eq(i + 1).prop('checked', true);
+                            // $('tr input[type="checkbox"]').eq(i + 1).next().addClass('layui-form-checked');
+
+                            for(let j = 1; j < tr.length; j++) {
+                                if(tr[j].children[2].children[0].children[0].innerText == data[i].id) {
+                                    $("tr .layui-unselect.layui-form-checkbox").eq(j).addClass("layui-form-checked");
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            // 全部展开
+            insTb.expandAll();
+        }
     });
+
+    var renderTable;
+
 
     function init(data) {
         var url = 'http://localhost:8081/menu/getMenus';
@@ -38,51 +120,55 @@
     }
 
     // 渲染表格(所有菜单数据，该角色所有的权限)
-    var renderTable = function(d, data) {
-        layer.load(2);
-        layui.treetable.render({
-            data: d,
-            treeColIndex: 2,        // 树形图标显示在第几列
-            treeSpid: -1,           // 最上级的父级id
-            treeIdName: 'id',       // id字段的名称
-            treePidName: 'parent_id',// pid字段的名称
-            elem: '#munu-table',
-            page: false,
-            id: 'idTest',
-            cols: [[
-                {type: 'checkbox', fixed: 'left'},
-                {field: 'id', hide: true, width: 60, title: 'id'},
-                {field: 'name', minWidth: 200, title: '权限名称'},
-                {field: 'auth', title: '权限标识'},
-                {
-                    field: 'is_menu', width: 80, align: 'center', templet: function (d) {
-                        if (d.is_menu == 1) {
-                            return '<span class="layui-badge layui-bg-gray">按钮</span>';
-                        }
-                        if (d.parent_id == -1) {
-                            return '<span class="layui-badge layui-bg-blue">目录</span>';
-                        } else {
-                            return '<span class="layui-badge-rim">菜单</span>';
-                        }
-                    }, title: '类型'
-                }
-            ]],
-            done: function (res, page, count) {
-                layer.closeAll('loading');
-                for (var i = 0; i < res.data.length; i++) {
-                    for (var j = 0; j < data.length; j++) {
-                        if (res.data[i].id == data[j].id) {
-                            res.data[i]["LAY_CHECKED"] = 'true';
-                            var index= res.data[i]['LAY_TABLE_INDEX'];
-                            $('tr[data-index=' + index + '] input[type="checkbox"]').prop('checked', true);
-                            $('tr[data-index=' + index + '] input[type="checkbox"]').next().addClass('layui-form-checked');
-                            continue;
-                        }
-                    }
-                }
-            }
-        });
-    }
+    // var renderTable = function(d, data) {
+    //     layer.load(2);
+    //
+    //     layui.treetable.render({
+    //         data: d,
+    //         treeColIndex: 2,        // 树形图标显示在第几列
+    //         isPidData: true,
+    //         treeSpid: -1,           // 最上级的父级id
+    //         treeIdName: 'id',       // id字段的名称
+    //         treePidName: 'parent_id',// pid字段的名称
+    //         treeDefaultClose: true,
+    //         // treeLinkage: true,
+    //         elem: '#munu-table',
+    //         page: false,
+    //         id: 'idTest',
+    //         cols: [[
+    //             {type: 'checkbox', fixed: 'left'},
+    //             {field: 'id', hide: true, width: 60, title: 'id'},
+    //             {field: 'name', minWidth: 200, title: '权限名称'},
+    //             {field: 'auth', title: '权限标识'},
+    //             {
+    //                 field: 'is_menu', width: 80, align: 'center', templet: function (d) {
+    //                     if (d.is_menu == 1) {
+    //                         return '<span class="layui-badge layui-bg-gray">按钮</span>';
+    //                     }
+    //                     if (d.parent_id == -1) {
+    //                         return '<span class="layui-badge layui-bg-blue">目录</span>';
+    //                     } else {
+    //                         return '<span class="layui-badge-rim">菜单</span>';
+    //                     }
+    //                 }, title: '类型'
+    //             }
+    //         ]],
+    //         done: function (res, page, count) {
+    //             layer.closeAll('loading');
+    //             for (var i = 0; i < res.data.length; i++) {
+    //                 for (var j = 0; j < data.length; j++) {
+    //                     if (res.data[i].id == data[j].id) {
+    //                         res.data[i]["LAY_CHECKED"] = 'true';
+    //                         var index= res.data[i]['LAY_TABLE_INDEX'];
+    //                         $('tr[data-index=' + index + '] input[type="checkbox"]').prop('checked', true);
+    //                         $('tr[data-index=' + index + '] input[type="checkbox"]').next().addClass('layui-form-checked');
+    //                         continue;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     });
+    // }
 
     function result() {
         var data = layui.table.checkStatus('idTest').data;
@@ -98,6 +184,7 @@
             ids: ids
         }
     }
+
 
 </script>
 

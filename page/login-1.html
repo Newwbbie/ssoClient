@@ -112,7 +112,7 @@
                 contentType: "application/json;charset=utf-8;",
                 data: JSON.stringify(data),
                 success: function(d) {
-                    if (d.data == 'SYSTEM_ERROR') {
+                    if (d.data == 'SYSTEM_ERROR' || d.success == false) {
                         console.log(data);
                         layer.msg("用户名或密码错误");
                         layer.closeAll('loading');
