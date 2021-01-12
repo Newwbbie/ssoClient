@@ -17,7 +17,7 @@
                 <button class="layui-btn" id="btn-expand">全部展开</button>
                 <button class="layui-btn layui-btn-normal" id="btn-fold">全部折叠</button>
             </div>
-            <table id="munu-table" class="layui-table" lay-filter="munu-table"></table>
+            <table id="menu-table" class="layui-table" lay-filter="menu-table"></table>
         </div>
     </div>
 </div>
@@ -32,13 +32,14 @@
 <script src="../../js/lay-config.js" charset="utf-8"></script>
 <script src="../../js/public.js" charset="utf-8"></script>
 <script>
-    layui.use(['table', 'treetable', 'layer'], function () {
+    layui.use(['table', 'treeTable', 'layer'], function () {
         var $ = layui.jquery;
         var table = layui.table;
-        var treetable = layui.treetable;
+        var treeTable = layui.treeTable;
         var layer = layui.layer;
+        var insTb;
 
-        var url = 'http://localhost:8081/menu/getMenus';
+        var url = ssoApi + "/menu/getMenus";
         mAjax({}, url, 'POST', function (d) {
             if (d.success == true && d.data != "SYSTEM_ERROR") {
                 renderTable(d.data.data);
@@ -49,15 +50,18 @@
 
         // 渲染表格
         var renderTable = function(data) {
-            layer.load(2);
-            treetable.render({
+            insTb = treeTable.render({
+                elem: '#menu-table',
                 data: data,
-                treeColIndex: 1,        // 树形图标显示在第几列
-                treeSpid: -1,           // 最上级的父级id
-                treeIdName: 'id',       // id字段的名称
-                treePidName: 'parent_id',// pid字段的名称
-                elem: '#munu-table',
+                tree: {
+                    iconIndex: 1,
+                    isPidData: true,
+                    idName: 'id',
+                    pidName: 'parent_id'
+                },
+                treeLinkage: true,
                 page: false,
+                id: 'idTest',
                 cols: [[
                     {type: 'numbers'},
                     {field: 'name', minWidth: 200, title: '权限名称'},
@@ -79,20 +83,34 @@
                     {templet: '#auth-state', width: 120, align: 'center', title: '操作'}
                 ]],
                 done: function () {
-                    layer.closeAll('loading');
+                    var tr = $("tr");
+                    if($("tr").length == (data.length + 1)) {
+                        $("tr .layui-unselect.layui-form-checkbox").addClass("layui-form-checked");
+                    }else {
+                        for (var i = 0; i < data.length; i++) {
+                            for(let j = 1; j < tr.length; j++) {
+                                if(tr[j].children[2].children[0].children[0].innerText == data[i].id) {
+                                    $("tr .layui-unselect.layui-form-checkbox").eq(j).addClass("layui-form-checked");
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
             });
+            // 全部展开
+            insTb.expandAll();
         }
 
         $('#btn-expand').click(function () {
-            treetable.expandAll('#munu-table');
+            insTb.expandAll();
         });
 
         $('#btn-fold').click(function () {
-            treetable.foldAll('#munu-table');
+            insTb.foldAll();
         });
 
-        table.on('tool(munu-table)', function (obj) {
+        table.on('tool(menu-table)', function (obj) {
             var data = obj.data;
             var layEvent = obj.event;
 

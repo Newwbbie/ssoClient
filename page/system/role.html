@@ -55,7 +55,7 @@
                 yes: function (index, layero) {
                     var iframeWin = window[layero.find('iframe')[0]['name']];
                     var data = iframeWin.result();
-                    var url = "http://localhost:8081/role/addRole";
+                    var url = ssoApi + "/role/addRole";
                     mAjax(data, url, "POST", function (d) {
                         if (d.success == true && d.data != "SYSTEM_ERROR") {
                             layer.msg('新增成功');
@@ -74,7 +74,7 @@
 
         // 查询
         $('#getRoles').click(function() {
-            var url = 'http://localhost:8081/role/getRoles';
+            var url = ssoApi + "/role/getRoles";
             const data = {
                 name: $('#name').val(),
             };
@@ -107,7 +107,7 @@
                         var iframeWin = window[layero.find('iframe')[0]['name']];
                         // 获取该角色信息
                         var data = { id: row.id };
-                        var url = "http://localhost:8081/menu/getMenuByRoleId";
+                        var url = ssoApi + "/menu/getMenuByRoleId";
                         mAjax(data, url, "POST", function (d) {
                             iframeWin.init(d.data);
                         });
@@ -117,7 +117,7 @@
                         var iframeWin = window[layero.find('iframe')[0]['name']];
                         var data = iframeWin.result();
                         data.roleId = row.id;
-                        var url = "http://localhost:8081/menu/updateMenuByRoleId";
+                        var url = ssoApi + "/menu/updateMenuByRoleId";
                         mAjax(data, url, "PUT", function (d) {
                             if (d.success == true && d.data != "SYSTEM_ERROR") {
                                 layer.msg('赋权成功');
@@ -138,7 +138,7 @@
                     layer.close(index);
                     // 向服务端发送删除指令
                     var data = { id: row.id };
-                    var url = "http://localhost:8081/role/deleteRoleById";
+                    var url = ssoApi + "/role/deleteRoleById";
                     mAjax(data, url, "DELETE", function (d) {
                         if (d.success == true && d.data != "SYSTEM_ERROR") {
                             layer.msg('删除成功');
@@ -161,7 +161,7 @@
                         var iframeWin = window[layero.find('iframe')[0]['name']];
                         // 获取该用户信息
                         var data = { id: row.id };
-                        var url = "http://localhost:8081/role/getRoleById";
+                        var url = ssoApi + "/role/getRoleById";
                         mAjax(data, url, "POST", function (data) {
                             iframeWin.init(data.data);
                         });
@@ -170,7 +170,7 @@
                     yes: function (index, layero) {
                         var iframeWin = window[layero.find('iframe')[0]['name']];
                         var data = iframeWin.result();
-                        var url = "http://localhost:8081/role/updateRoleById";
+                        var url = ssoApi + "/role/updateRoleById";
                         mAjax(data, url, "PUT", function (d) {
                             if (d.success == true && d.data != "SYSTEM_ERROR") {
                                 layer.msg('更新成功');

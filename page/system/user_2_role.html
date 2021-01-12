@@ -29,7 +29,7 @@
     function init(data) {
         layui.table.render({
             elem: '#test'
-            ,url: 'http://localhost:8081/role/getRoles'
+            ,url: ssoApi + "/role/getRoles"
             ,method: 'POST'
             ,headers: { token: token }
             ,request: { pageName: 'pageNum', limitName: 'pageSize' }

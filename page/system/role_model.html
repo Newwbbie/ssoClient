@@ -39,7 +39,7 @@
         var form = layui.form;
         var layer = layui.layer;
 
-        var url = 'http://localhost:8081/product/getProducts';
+        var url = ssoApi + "/product/getProducts";
         $.ajax({
             url: url,
             type: 'GET',

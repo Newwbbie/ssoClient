@@ -67,6 +67,7 @@
 <script src="../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
 <script src="../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
 <script src="../lib/jq-module/jquery.particleground.min.js" charset="utf-8"></script>
+<script src="../js/lay-config.js" charset="utf-8"></script>
 <script>
     layui.use(['form'], function () {
         var form = layui.form,
@@ -107,7 +108,7 @@
                 "password": data.password
             };
             $.ajax({
-                url: "http://localhost:8081/sso/login",
+                url: ssoApi + "/sso/login",
                 type: 'POST',
                 contentType: "application/json;charset=utf-8;",
                 data: JSON.stringify(data),
@@ -121,7 +122,7 @@
                     token = d.token;
                     // 菜单生成
                     $.ajax({
-                        url: 'http://localhost:8081/sso/getMenusByUserId',
+                        url: ssoApi + "/sso/getMenusByUserId",
                         type: 'POST',
                         async: false,   // 同步
                         headers: { token: token },

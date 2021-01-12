@@ -12,7 +12,7 @@
 <body>
 <div class="layuimini-container">
     <div class="layuimini-main">
-        <table class="layui-table" id="munu-table" lay-filter="munu-table"></table>
+        <table class="layui-table" id="menu-table" lay-filter="menu-table"></table>
     </div>
 </div>
 
@@ -21,7 +21,8 @@
 <script src="../../js/lay-config.js" charset="utf-8"></script>
 <script src="../../js/public.js" charset="utf-8"></script>
 <script>
-
+    
+    var renderTable;
     var insTb;
 
     layui.use(['layer', 'table', 'treeTable'], function () {
@@ -32,7 +33,7 @@
         renderTable = function(d, data) {
             // layer.load(2);
             insTb =  treeTable.render({
-                elem: '#munu-table',
+                elem: '#menu-table',
                 data: d,
                 tree: {
                     iconIndex: 3,
@@ -80,8 +81,7 @@
                 // }
                 done: function () {
                     // treeTable.expandAll()
-                    console.log(treeTable)
-
+                    // console.log(treeTable)
 
                     var tr = $("tr");
                     if($("tr").length == (data.length + 1)) {
@@ -108,11 +108,8 @@
         }
     });
 
-    var renderTable;
-
-
     function init(data) {
-        var url = 'http://localhost:8081/menu/getMenus';
+        var url = ssoApi + "/menu/getMenus";
         mAjax({}, url, 'POST', function (d) {
             if (d.success == true && d.data != "SYSTEM_ERROR") {
                 renderTable(d.data.data, data);
@@ -135,7 +132,7 @@
     //         treePidName: 'parent_id',// pid字段的名称
     //         treeDefaultClose: true,
     //         // treeLinkage: true,
-    //         elem: '#munu-table',
+    //         elem: '#menu-table',
     //         page: false,
     //         id: 'idTest',
     //         cols: [[

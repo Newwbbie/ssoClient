@@ -157,7 +157,7 @@
             }, function () {
                 // 清空账号session
                 $.ajax({
-                    url: 'http://localhost:8081/user/deleteSessionByUserId',
+                    url: ssoApi + "/user/deleteSessionByUserId",
                     type: 'DELETE',
                     headers: { token: localStorage.getItem("token") },
                     contentType: "application/json;charset=utf-8;",
