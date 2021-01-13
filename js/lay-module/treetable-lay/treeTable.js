@@ -1221,8 +1221,9 @@ layui.define(['laytpl', 'form', 'util'], function (exports) {
     /** 重载表格 */
     TreeTable.prototype.reload = function (opt) {
         this.initOptions(this.options ? $.extend(true, this.options, opt) : opt);
-        this.init();  // 初始化表格
+        this.init();        // 初始化表格
         this.bindEvents();  // 绑定事件
+        this.expandAll();   // 全部展开
     };
 
     /** 获取当前选中行 */

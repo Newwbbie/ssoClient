@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>菜单模板</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+<form class="layui-form layui-form-pane" action="" lay-filter="form">
+    <div class="layui-form-item">
+        <label class="layui-form-label">菜单名</label>
+        <div class="layui-input-inline">
+            <input type="text" id="name" name="name" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">权限标识</label>
+        <div class="layui-input-inline">
+            <input type="text" id="auth" name="auth" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">图标</label>
+        <div class="layui-input-inline">
+            <input type="text" id="icon" name="icon" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">有子菜单</label>
+        <div class="layui-input-block">
+            <input type="radio" name="isMenu" value="0" title="是" checked="">
+            <input type="radio" name="isMenu" value="1" title="否">
+        </div>
+    </div>
+</form>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../js/lay-config.js" charset="utf-8"></script>
+<script src="../../js/public.js" charset="utf-8"></script>
+<script>
+    var id;
+    var parentId;
+
+    layui.use(['form', 'layer'], function () {
+        var form = layui.form;
+        var layer = layui.layer;
+
+    });
+
+    function init(data) {
+        id = data.id;
+        if (data.parent_id) {
+            parentId = data.parent_id;
+        } else {    // 没有parentId，则是修改操作，要赋值
+            layui.form.val("form", { // 即 class="layui-form" 所在元素属性 lay-filter="" 对应的值
+                "name": data.name,
+                "auth": data.auth,
+                "icon": data.icon,
+                "isMenu": data.isMenu
+            });
+        }
+    }
+
+    function result() {
+        var formValue = layui.form.val("form");
+        if (id) {
+            formValue.id = id;
+        }
+        if (parentId) {
+            formValue.parentId = parentId;
+        }
+        return formValue;
+    }
+</script>
+</body>
+</html>

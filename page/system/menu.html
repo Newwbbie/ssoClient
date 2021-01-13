@@ -17,12 +17,14 @@
                 <button class="layui-btn" id="btn-expand">全部展开</button>
                 <button class="layui-btn layui-btn-normal" id="btn-fold">全部折叠</button>
             </div>
-            <table id="menu-table" class="layui-table" lay-filter="menu-table"></table>
+            <table id="datagrid" class="layui-table" lay-filter="datagrid"></table>
         </div>
     </div>
 </div>
 <!-- 操作列 -->
-<script type="text/html" id="auth-state">
+<script type="text/html" id="operation">
+    <a class="layui-btn layui-btn-xs" lay-event="add">新增同级</a>
+    <a class="layui-btn layui-btn-xs" lay-event="addChilden">新增子级</a>
     <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="edit">修改</a>
     <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
 </script>
@@ -32,26 +34,29 @@
 <script src="../../js/lay-config.js" charset="utf-8"></script>
 <script src="../../js/public.js" charset="utf-8"></script>
 <script>
-    layui.use(['table', 'treeTable', 'layer'], function () {
+    layui.use(['treeTable', 'layer'], function () {
         var $ = layui.jquery;
-        var table = layui.table;
         var treeTable = layui.treeTable;
         var layer = layui.layer;
         var insTb;
 
-        var url = ssoApi + "/menu/getMenus";
-        mAjax({}, url, 'POST', function (d) {
-            if (d.success == true && d.data != "SYSTEM_ERROR") {
-                renderTable(d.data.data);
-            } else {
-                layer.msg("无数据");
-            }
-        });
+        // 获取菜单
+        var getMenus = function () {
+            var url = ssoApi + "/menu/getMenus";
+            mAjax({}, url, 'POST', function (d) {
+                if (d.success == true && d.data != "SYSTEM_ERROR") {
+                    renderTable(d.data.data);
+                } else {
+                    layer.msg("无数据");
+                }
+            });
+        }
+        getMenus();
 
         // 渲染表格
         var renderTable = function(data) {
             insTb = treeTable.render({
-                elem: '#menu-table',
+                elem: '#datagrid',
                 data: data,
                 tree: {
                     iconIndex: 1,
@@ -80,7 +85,7 @@
                             }
                         }, title: '类型'
                     },
-                    {templet: '#auth-state', width: 120, align: 'center', title: '操作'}
+                    {templet: '#operation', width: 260, align: 'center', title: '操作', fixed: 'right'}
                 ]],
                 done: function () {
                     var tr = $("tr");
@@ -98,8 +103,6 @@
                     }
                 }
             });
-            // 全部展开
-            insTb.expandAll();
         }
 
         $('#btn-expand').click(function () {
@@ -110,16 +113,107 @@
             insTb.foldAll();
         });
 
-        table.on('tool(menu-table)', function (obj) {
-            var data = obj.data;
-            var layEvent = obj.event;
+        treeTable.on('tool(datagrid)', function (obj) {
+            var row = obj.data;
+            var event = obj.event;
 
-            if (layEvent === 'del') {
-                layer.msg('删除' + data.id);
-            } else if (layEvent === 'edit') {
-                layer.msg('修改' + data.id);
+            if (event === 'del') {
+                // 删除
+                layer.confirm('真的删除行么', function(index){
+                    obj.del(); // 删除对应行（tr）的DOM结构
+                    layer.close(index);
+                    // 向服务端发送删除指令
+                    var data = { id: row.id };
+                    var url = ssoApi + "/menu/deleteMenuById";
+                    mAjax(data, url, "DELETE", function (d) {
+                        if (d.success == true && d.data != "SYSTEM_ERROR") {
+                            layer.msg('删除成功');
+                        } else {
+                            layer.msg('删除失败');
+                        }
+                    });
+                });
+            } else if (event === 'edit') {
+                // 修改
+                layer.open({
+                    type: 2,
+                    title: '修改菜单',
+                    area: [, '480px'],
+                    shade: 0.1,
+                    maxmin: true,
+                    content: 'menu_model.html',
+                    success: function(layero, index) {
+                        var iframeWin = window[layero.find('iframe')[0]['name']];
+                        var data = { id: row.id };
+                        var url = ssoApi + "/menu/getMenuById";
+                        mAjax(data, url, "POST", function (data) {
+                            iframeWin.init(data.data);
+                        });
+                    },
+                    btn: ['确定', '取消'],
+                    yes: function (index, layero) {
+                        var iframeWin = window[layero.find('iframe')[0]['name']];
+                        var data = iframeWin.result();
+                        var url = ssoApi + "/menu/updateMenuById";
+                        mAjax(data, url, "PUT", function (d) {
+                            if (d.success == true && d.data != "SYSTEM_ERROR") {
+                                layer.msg('更新成功');
+                                layer.close(index);
+                                getMenus();
+                            } else {
+                                layer.msg('更新失败');
+                            }
+                        });
+                    },
+                    btn2: function () {
+                        layer.close();
+                    }
+                });
+            } else if (event === 'add') {
+                // 新增同级菜单
+                addMenus(row.id, row.parent_id);
+            } else if (event === 'addChilden') {
+                // 新增子级菜单
+                addMenus(row.id, row.id);
             }
         });
+
+        var addMenus = function (id, parent_id) {
+            layer.open({
+                type: 2,
+                title: '新增菜单',
+                area: [, '480px'],
+                shade: 0.1,
+                maxmin: true,
+                content: 'menu_model.html',
+                success: function(layero, index) {
+                    var iframeWin = window[layero.find('iframe')[0]['name']];
+                    var data = {
+                        id: id,
+                        parent_id: parent_id // 这里是新增菜单的父级id
+                    };
+                    iframeWin.init(data);
+                },
+                btn: ['确定', '取消'],
+                yes: function (index, layero) {
+                    var iframeWin = window[layero.find('iframe')[0]['name']];
+                    var data = iframeWin.result();
+                    var url = ssoApi + "/menu/addMenu";
+                    mAjax(data, url, "POST", function (d) {
+                        if (d.success == true && d.data != "SYSTEM_ERROR") {
+                            layer.msg('新增成功');
+                            layer.close(index);
+                            getMenus();
+                        } else {
+                            layer.msg('新增失败');
+                        }
+                    });
+                },
+                btn2: function () {
+                    layer.close();
+                }
+            });
+        }
     });
 </script>
 </body>
