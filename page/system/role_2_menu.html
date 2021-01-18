@@ -31,7 +31,6 @@
         var treeTable = layui.treeTable;
 
         renderTable = function(d, data) {
-            // layer.load(2);
             insTb =  treeTable.render({
                 elem: '#menu-table',
                 data: d,
@@ -64,22 +63,7 @@
                         }, title: '类型'
                     }
                 ]],
-                // done: function (res, page, count) {
-                    // console.log(res)
-                    // layer.closeAll('loading');
-                    // for (var i = 0; i < res.data.length; i++) {
-                    //     for (var j = 0; j < data.length; j++) {
-                    //         if (res.data[i].id == data[j].id) {
-                    //             res.data[i]["LAY_CHECKED"] = 'true';
-                    //             var index= res.data[i]['LAY_TABLE_INDEX'];
-                    //             $('tr[data-index=' + index + '] input[type="checkbox"]').prop('checked', true);
-                    //             $('tr[data-index=' + index + '] input[type="checkbox"]').next().addClass('layui-form-checked');
-                    //             continue;
-                    //         }
-                    //     }
-                    // }
-                // }
-                done: function () {
+                done: function (res) {
                     // treeTable.expandAll()
                     // console.log(treeTable)
 
@@ -88,14 +72,10 @@
                         $("tr .layui-unselect.layui-form-checkbox").addClass("layui-form-checked");
                     }else {
                         for (var i = 0; i < data.length; i++) {
-                            // d[i]["LAY_CHECKED"] = 'true';
-                            // var index = data[i]['LAY_TABLE_INDEX'];
-                            // $('tr input[type="checkbox"] ').eq(i + 1).prop('checked', true);
-                            // $('tr input[type="checkbox"]').eq(i + 1).next().addClass('layui-form-checked');
-
                             for(let j = 1; j < tr.length; j++) {
                                 if(tr[j].children[2].children[0].children[0].innerText == data[i].id) {
                                     $("tr .layui-unselect.layui-form-checkbox").eq(j).addClass("layui-form-checked");
+                                    // $("tr .layui-unselect.layui-form-checkbox").eq(j).trigger('click');
                                     break;
                                 }
                             }
@@ -172,13 +152,13 @@
         var data = insTb.checkStatus();
         var ids = "";
         for (var i = 0; i < data.length; i++) {
-            if (data[i].is_menu == true) {
-                if (ids == "") {
-                    ids += data[i].id;
-                } else {
-                    ids += "," + data[i].id;
-                }
+            // if (data[i].is_menu == true) {
+            if (ids == "") {
+                ids += data[i].id;
+            } else {
+                ids += "," + data[i].id;
             }
+            // }
         }
         return {
             ids: ids
