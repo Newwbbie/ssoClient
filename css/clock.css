@@ -1,0 +1,36 @@
+body {
+    background: #eee;
+}
+
+svg {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.filler {
+    background: #2076b7;
+    position: absolute;
+    bottom: 50%;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+#shadow {
+    fill: rgba(0, 0, 0, 0.1)
+}
+
+#circle {
+    fill: #2076b7;
+    stroke: #FFF;
+    stroke-width: 12px;
+}
+
+#center {
+    fill: #125a8a;
+    stroke: #c1e4ef;
+    stroke-width: 2px;
+}

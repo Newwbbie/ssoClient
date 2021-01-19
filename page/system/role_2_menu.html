@@ -20,12 +20,18 @@
 <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
 <script src="../../js/lay-config.js" charset="utf-8"></script>
 <script src="../../js/public.js" charset="utf-8"></script>
+<script type="text/html" id="menuTool">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="expand">全部展开</button>
+        <button class="layui-btn layui-btn-sm layui-btn-normal" lay-event="fold">全部折叠</button>
+    </div>
+</script>
 <script>
     
     var renderTable;
     var insTb;
 
-    layui.use(['layer', 'table', 'treeTable'], function () {
+    layui.use(['layer', 'treeTable'], function () {
         var layer = layui.layer;
         var table = layui.table;
         var treeTable = layui.treeTable;
@@ -44,6 +50,7 @@
                 treeLinkage: true,
                 page: false,
                 id: 'idTest',
+                toolbar: '#menuTool',
                 cols: [[
                     {field: 'id', type: 'checkbox', fixed: 'left'},
                     {type: 'numbers'},
@@ -83,7 +90,20 @@
                     }
                 }
             });
+            insTb.foldAll();
         }
+
+        treeTable.on('toolbar(menu-table)', function(obj) {
+            var checkStatus = obj.event;
+            switch(obj.event){
+                case 'expand':
+                    insTb.expandAll();
+                    break;
+                case 'fold':
+                    insTb.foldAll();
+                    break;
+            };
+        });
     });
 
     function init(data) {

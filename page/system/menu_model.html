@@ -24,6 +24,12 @@
         </div>
     </div>
     <div class="layui-form-item">
+        <label class="layui-form-label">链接</label>
+        <div class="layui-input-inline">
+            <input type="text" id="url" name="url" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
         <label class="layui-form-label">图标</label>
         <div class="layui-input-inline">
             <input type="text" id="icon" name="icon" placeholder="请输入" autocomplete="off" class="layui-input">
@@ -60,6 +66,7 @@
             layui.form.val("form", { // 即 class="layui-form" 所在元素属性 lay-filter="" 对应的值
                 "name": data.name,
                 "auth": data.auth,
+                "url": data.url,
                 "icon": data.icon,
                 "isMenu": data.isMenu
             });
