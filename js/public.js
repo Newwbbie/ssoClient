@@ -48,6 +48,13 @@ function mTable(dom, url, token, data, cols) {
                     window.location = 'page/login-1.html';
                 });
                 return;
+            } else if(res.errorCode == 'U003') {
+                window.parent.layui.layer.msg('没有权限，即将返回登录页面', {
+                    time: 1000  // 1秒关闭
+                }, function () {
+                    window.location = 'page/login-1.html';
+                });
+                return;
             }
             return {
                 "code": res.success,
