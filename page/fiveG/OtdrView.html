@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>OTDR数据展示</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+    <link rel="stylesheet" href="/layuiDemo/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/layuiDemo/style/admin.css" media="all">
+</head>
+<body>
+    <!-- echarts图表 -->
+    <div id="main" style="width: 100%;height:600px;"></div>
+    <!-- 表格 -->
+    <div style="margin: 0 20px 0 20px;">
+        <table id="a1" class="layui-table"></table>
+        <table id="a2" class="layui-table"></table>
+    </div>
+
+    <script src="/js/jquery-3.1.1.min.js"></script>
+    <script src="/layuiDemo/layui/layui.js"></script>
+    <script src="/js/echarts-4.9/echarts.js"></script>
+    <script th:inline="javascript">
+        layui.use('element', function(){
+            var json = JSON.parse([[${otdr}]]);
+
+            if (json != null) {
+                // 加载图表
+                loadEcharts(json, echarts);
+                // 加载表格
+                loadTable(json);
+            }
+
+        });
+
+        function loadEcharts(json, echarts) {
+            var myChart = echarts.init(document.getElementById('main'));
+            option = {
+                // 提示框
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    name: '距离（Km）',
+                    type: 'category'
+                },
+                yAxis: {
+                    name: '衰耗（dB）',
+                    type: 'value'
+                },
+                dataZoom: [{
+                    type: 'inside',
+                    start: 0,
+                    end: 100
+                }, {
+                    start: 0,
+                    end: 100,
+                    handleIcon: 'M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+                    handleSize: '70%'
+                }],
+                series: [
+                    {
+                        name: '',
+                        type: 'line',
+                        // smooth: true,
+                        symbol: 'none',
+                        itemStyle: {
+                            normal: {
+                                // 拐点上显示数值
+                                // label: {
+                                //     show: true
+                                // },
+                                // borderColor: 'red',  // 拐点边框颜色
+                                lineStyle: {
+                                    width: 1,  // 设置线宽
+                                    type: 'solid'  //'dotted'虚线 'solid'实线
+                                }
+                            }
+                        }
+                    }
+                ]
+            };
+            myChart.setOption(option);
+            myChart.showLoading();
+
+            var x = [];
+            var y = [];
+            var otdr = json.dataChartList;
+            for (var i = 0; i < otdr.length; i++) {
+                x.push(otdr[i].x);
+                y.push(otdr[i].y);
+            }
+
+            myChart.hideLoading();    //隐藏加载动画
+            myChart.setOption({       //加载数据图表
+                xAxis: {
+                    name: '距离（Km）',
+                    data: x
+                },
+                series: [{
+                    name: '衰耗（dB）',
+                    data: y
+                }]
+            });
+        }
+
+        function loadTable(json) {
+            $("#a1").append("<thead>" +
+                "<tr>" +
+                "    <th style='background-color: #e6e6e6;text-align: center;'>波长</th>" +
+                "    <th style='background-color: #fff;'>"+ json.fixedParas_actualWavelength / 10 +" nm</th>" +
+                "    <th style='background-color: #e6e6e6;text-align: center;'>量程</th>" +
+                "    <th style='background-color: #fff;'>"+ json.fixedParas_ARDistance +" "+ json.fixedParas_distanceUnit +"</th>" +
+                "    <th style='background-color: #e6e6e6;text-align: center;'>脉宽</th>" +
+                "    <th style='background-color: #fff;'>"+ maiKuan(json.fixedParas_vPulseWidth) +"</th>" +
+                "    <th style='background-color: #e6e6e6;text-align: center;'>长度</th>" +
+                "    <th style='background-color: #fff;'>"+ parseFloat(json.keyEvent[json.keyEvent.length-1].distance).toFixed(1) +" m</th>" +
+                "    <th style='background-color: #e6e6e6;text-align: center;'>总损耗</th>" +
+                "    <th style='background-color: #fff;'>"+ undefined2a(json.keyEvent[json.keyEvent.length-1].tLoss) +"</th>" +
+                "    <th style='background-color: #e6e6e6;text-align: center;'>事件数</th>" +
+                "    <th style='background-color: #fff;'>"+ json.keyEvent.length +"</th>" +
+                "</tr>" +
+                "</thead>");
+            $("#a2").append("<thead><tr>" +
+                "<th>序号</th>" +
+                "<th>类型</th>" +
+                "<th>距离（m）</th>" +
+                "<th>损耗（dB）</th>" +
+                "<th>衰减（dB/Km）</th>" +
+                "<th>反射（-dB）</th>" +
+                "<th>总损耗（dB）</th>" +
+                "</tr></thead>");
+            $("#a2").append("<tbody>");
+            for (i = 0; i < json.keyEvent.length; i++) {
+                var item = json.keyEvent[i];
+                $("#a2").append("<tr>" +
+                    "<th>"+ item.num +"</th>" +
+                    "<th>"+ item.type +"</th>" +
+                    "<th>"+ item.distance.toFixed(1) +"</th>" +
+                    "<th>"+ item.loss.toFixed(3) +"</th>" +
+                    "<th>"+ item.atten.toFixed(3) +"</th>" +
+                    "<th>"+ item.ref +"</th>" +
+                    "<th>"+ item.tLoss +"</th>" +
+                    "</tr>");
+            }
+            $("#a2").append("</tbody>");
+        }
+
+        // 处理脉宽
+        function maiKuan(num) {
+            num = parseFloat(num);
+            if (num < 1000) {
+                return num + " ns";
+            } else {
+                return num / 1000 + " ns";
+            }
+        }
+
+        // 处理总损耗
+        function undefined2a(num) {
+            if (num === undefined) {
+                return "0 dB";
+            } else {
+                return num + " dB";
+            }
+        }
+        
+        function chu1000(num) {
+            num = parseFloat(num);
+            return num / 1000;
+        }
+
+        function chuFu1000(num) {
+            num = parseFloat(num);
+            return num / -1000;
+        }
+
+    </script>
+</body>
+</html>

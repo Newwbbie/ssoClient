@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>组网系统管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+    <link rel="stylesheet" href="/layuiDemo/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/layuiDemo/style/admin.css" media="all">
+    <link rel="stylesheet" href="/easyui-1.7/themes/material/easyui.css">
+    <link rel="stylesheet" href="/easyui-1.7/themes/icon.css">
+</head>
+<body>
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+                <div class="layui-inline layui-col-xs3">
+                    <label class="layui-form-label">组网名称</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="sysName" placeholder="请输入组网系统名称" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-inline layui-col-xs3">
+                    <label class="layui-form-label">近端合波</label>
+                    <div class="layui-input-block">
+                        <select id="aWaveDeviceId" lay-verify="required">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-inline layui-col-xs3">
+                    <label class="layui-form-label">远端分波</label>
+                    <div class="layui-input-block">
+                        <select id="zWaveDeviceId" lay-verify="required">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-inline layui-col-xs3">
+                    <label class="layui-form-label">cu设备</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="cuId" placeholder="请输入cu设备名" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-inline layui-col-xs3">
+                    <label class="layui-form-label">aau设备</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="aauId" placeholder="请输入aau设备名" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <div style="padding-bottom: 10px;">
+                <button class="layui-btn layui-btn-normal" type="button" onclick="que()">查询</button>
+                <button class="layui-btn layui-btn-warm" type="button" onclick="showData()">数据呈现</button>
+            </div>
+
+            <table id="dg"></table>
+        </div>
+    </div>
+
+</div>
+
+<script src="/js/jquery-3.1.1.min.js"></script>
+<script src="/layuiDemo/layui/layui.js"></script>
+<script type="text/javascript" src="/easyui-1.7/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="/easyui-1.7/locale/easyui-lang-zh_CN.js"></script>
+
+<script>
+
+    $(window).resize(function () {
+        $('#dg').datagrid('resize');
+    });
+
+    $(function() {
+        // 查询组网系统
+        que();
+        // 想要使用layui的下拉框就要加载form模块
+        layui.use('form', function(){
+            var form = layui.form;
+        });
+
+    });
+    // 查询所有的近端合波的id和名称
+    selAllATypeIdName();
+    // 查询所有的远端分波的id和名称
+    selAllZTypeIdName();
+
+    // 查询所有的近端合波的id和名称
+    function selAllATypeIdName() {
+        var aWaveDeviceId = $("#aWaveDeviceId");
+        $.ajax({
+            url: "/device/selAllATypeIdName",
+            type: 'post',
+            dataType: 'json',
+            async: false,
+            success: function (data) {
+                $.each(data, function (index, stt) {
+                    aWaveDeviceId.append("<option value=" + stt.DEVICE_ID + ">" + stt.DEVICE_NAME + "</option>");
+                });
+            }
+        });
+    }
+
+    // 查询所有的远端分波的id和名称
+    function selAllZTypeIdName() {
+        var zWaveDeviceId = $("#zWaveDeviceId");
+        $.ajax({
+            url: "/device/selAllZTypeIdName",
+            type: 'post',
+            dataType: 'json',
+            async: false,
+            success: function (data) {
+                $.each(data, function (index, stt) {
+                    zWaveDeviceId.append("<option value=" + stt.DEVICE_ID + ">" + stt.DEVICE_NAME + "</option>");
+                });
+            }
+        });
+    }
+
+    // 查询组网系统
+    function que() {
+        var obj = {
+            sysName : $('#sysName').val(),
+            aWaveDeviceId : $("#aWaveDeviceId option:selected").val(),
+            zWaveDeviceId : $("#zWaveDeviceId option:selected").val(),
+            cuId : $('#cuId').val(),
+            aauId : $('#aauId').val()
+        };
+        $('#dg').datagrid({
+            url: "/sys/querySys",
+            striped: true, 		// 奇偶行使用不同背景色
+            pagination: true,	// 分页工具栏
+            rownumbers: true,	// 初始化页码
+            pageSize: 20,
+            pageList: [10,20,30,40,50],
+            singleSelect: true,	// 单选
+            fitColumns: false,	// 自适应表格宽度
+            height: window.innerHeight - 121 - $('.layui-card-header').height(),
+            sync: false,
+            queryParams: obj,
+            method: "post",
+            // 实现选择单行，取消单行
+            onBeforeSelect: function(index, row){
+                var row = $('#dg').datagrid('getSelected');
+                var curRowindex = $('#dg').datagrid('getRowIndex',row);
+                if(curRowindex != index) {return true;}
+                else{ $('#dg').datagrid('unselectRow',index); return false;}
+            },
+            columns: [ [
+                {field: 'SYS_ID', title: '组网系统id', align: 'center', checkbox: true},
+                {field: 'SYS_NAME', title: '组网系统名称', align: 'center', width: '15%'},
+                {field: 'SYS_NO', title: '组网系统编码', align: 'center', width: '10%'},
+                {field: 'A_WAVE_DEVICE_ID', title: '近端合波设备', align: 'center', width: '15%'},
+                {field: 'Z_WAVE_DEVICE_ID', title: '远端分波设备', align: 'center', width: '15%'},
+                {field: 'CU_ID', title: 'cu设备', align: 'center', width: '5%'},
+                {field: 'AAU_ID', title: 'aau设备', align: 'center', width: '5%'},
+                {field: 'CREATE_OP', title: '创建人', align: 'center', width: '10%'},
+                {field: 'CREATE_DATE', title: '创建日期', align: 'center', width: '15%'},
+                {field: 'UPDATE_OP', title: '修改人', align: 'center', width: '10%'},
+                {field: 'UPDATE_DATE', title: '修改日期', align: 'center', width: '15%'}
+            ] ],
+            onLoadSuccess: function (data) {
+                $("#dg").datagrid('resize');
+            }
+        });
+    }
+
+    // 查看组网数据图形
+    function showData() {
+        var row = $('#dg').datagrid('getSelected');
+        if (row == null) {
+            layer.msg('请选择一条数据');
+            return;
+        }
+        // 在iframe中打开一个新页面
+        top.layui.index.openTabsPage('/sys/showSysData?sysId=' + row.SYS_ID, '5G组网数据展示');
+    }
+
+    window.addEventListener("resize", function() {
+        $('#dg').datagrid({
+            height: window.innerHeight - 121 - $('.layui-card-header').height()
+        });
+    });
+
+</script>
+</body>
+</html>

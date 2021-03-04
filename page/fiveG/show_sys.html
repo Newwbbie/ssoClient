@@ -1,0 +1,3192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>组网图形数据展示</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <link rel="stylesheet" href="../../lib/easyui-1.7/themes/material/easyui.css">
+    <link rel="stylesheet" href="../../lib/easyui-1.7/themes/icon.css">
+    <link rel="stylesheet" href="../../lib/bootstrap-3.3.7/css/bootstrap.min.css">
+    <style>
+        :root {
+            --high-quality-color-dark: rgb(58,177,9);
+            --high-quality-color: rgb(66,226,119);
+            --qualified-color-dark: rgb(255, 221, 0);
+            --qualified-color: rgb(255, 250, 101);
+            --available-color-dark: rgb(240, 147, 43);
+            --available-color: rgb(255, 192, 72);
+            --not-available-color-dark: rgb(234,7,7);
+            --not-available-color: rgb(231,91,49);
+            --free-color-dark: rgb(15, 188, 249);
+            --free-color: rgb(24, 220, 255);
+            --not-tested-color-dark: rgb(164, 176, 190);
+            --not-tested-color: rgb(192,201,217);
+        }
+
+        body {
+            min-width: 1000px;
+            position: relative;
+            background: #f2f2f2;
+        }
+
+        /*最顶部的div，包括组网名，规格，A、D端，系统达标率和全程衰耗*/
+        .top-show {
+            margin: 0 15px 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /*组网名，A、D端*/
+        .choiceA_Z-show {
+            width: 56.5%;
+        }
+
+        .sys_name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .sys_name,
+        .specifications {
+            text-align: center;
+            font-size: 18px;
+            padding: 10px 0;
+        }
+
+        /*A、D端*/
+        .choiceA_Z-show #gldList {
+            font-size: 15px;
+            color: #3C4353;
+            padding: 0 18px;
+        }
+        .choiceA_Z-show #gldList,
+        .pass-decay{
+            background: #fff;
+            border-radius: 10px;
+            height: 240px;
+            max-height: 240px;
+            overflow: auto;
+            box-shadow: 2px 2px 5px #ced6e0;
+        }
+        #gldList .gldListA,
+        #gldList .gldListZ {
+            display:flex;
+            justify-content:space-between;
+            border-bottom: 1px solid #b2bec3;
+            min-height: 79px;
+        }
+        #gldList .gldListLeft {
+            display:flex;
+        }
+        #gldList .gldListLeft .gldListLeftTop {
+            height: 100%;
+            display:flex;
+            align-items: center;
+            margin: 0 10px 0 0;
+        }
+        #gldList .gldListLeft .gldListLeftTop input {
+            margin: 0;
+        }
+        #gldList .gldListLeft .gldListLeftBottom p,
+        #gldList .gldListRight p {
+            margin: 16px 0 9px 0;
+        }
+        #gldList .gldListLeft .gldListAZLeftBottom {
+            display: flex;
+            align-items: center;
+        }
+        #gldList a {
+            font-size: 16px;
+            text-decoration: underline;
+        }
+        #gldList a,
+        #gldList .gldListRight span {
+            color: #838A9D;
+            display: inline-block;
+            margin: 0 0 10px 0;
+        }
+        #gldList .gldListRight {
+            text-align: right;
+            margin-right: 10px;
+            min-width: 60px;
+        }
+        #gldList .gldListRight img {
+            width: 58px;
+            height: 58px;
+            margin-top: 11px;
+            cursor: pointer;
+        }
+
+        #deviation_loss p {
+            margin: 0;
+        }
+
+        /*规格，系统达标率，全程衰耗*/
+        .right-show {
+            width: 42%;
+        }
+        .right-show .specifications {
+            position: relative;
+        }
+        .right-show .specifications .sys-health {
+            margin-left: 15px;
+        }
+        .right-show .specifications .layui-icon-tips {
+            position: absolute;
+            top: 8px;
+            right: 0;
+            font-size: 20px;
+            transition: all 0.5s ease;
+        }
+        .right-show .specifications .layui-icon-tips:hover {
+            color: #fffa65;
+        }
+        .right-show .specifications .explain:hover {
+            color: #7efff5;
+        }
+        .right-show .specifications .explain {
+            position: absolute;
+            display: none;
+            top: 0;
+            right: 20px;
+            width: 350px;
+            background: #00000090;
+            color: white;
+            text-align: left;
+            transition: all 0.5s ease;
+            font-size: 14px;
+            z-index: 9;
+        }
+        .specifications .explain .explain_width {
+            margin: 5px 10px;
+            float: left;
+        }
+        .specifications .explain .explain_width p {
+            margin-bottom: 5px;
+        }
+        .specifications .explain .explain_qualified {
+            margin: 5px 10px;
+        }
+        .specifications .explain .explain_qualified p {
+            margin-bottom: 10px;
+        }
+        .specifications .explain .explain_qualified p:last-child {
+            margin-bottom: 0;
+        }
+        /*系统达标率，全程衰耗*/
+        .pass-decay {
+            display: flex;
+            padding: 15px 18px;
+        }
+        .pass-decay .pass-rate {
+            margin-right: 20px;
+        }
+        .pass-rate .tj .fenxi {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 10px;
+            line-height: 38px;
+        }
+        .pass-decay .decay {
+            width: 60%;
+            max-height: 210px;
+            overflow: auto;
+        }
+        .decay .A_D_decay {
+            text-align: center;
+        }
+        .decay .A_D_decay p {
+            margin: 0;
+            padding: 2px 0;
+        }
+
+        /*达标显示*/
+        .link_color {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            display: flex;
+            color: white;
+        }
+        .link_color .span_color {
+            display: inline-block;
+            width: 40px;
+            height: 6px;
+        }
+        .link_color .span_color.yes {
+            background: rgb(24,220,255);
+        }
+        .link_color .span_color.no {
+            background: rgb(255, 77, 77);
+        }
+        .link_color .span_color.wave_leng {
+            background: rgb(223,228,234);
+        }
+        .link_color div:nth-child(1),
+        .link_color div:nth-child(2){
+            margin-right: 30px;
+        }
+
+        /*节点连接线提示框*/
+        #tips {
+            position: absolute;
+            z-index: 999999;
+            top: 35px;
+            left: 0;
+            right: 0;
+            border-radius: 5px;
+            margin: 0 auto;
+            text-align: center;
+            color: white;
+            display: none;
+            width: 50%;
+            padding: 5px 0;
+            background: #00000060;
+        }
+
+        .left_span {
+            font-weight: bold;
+        }
+
+        /*开启flex布局*/
+        .flex_div {
+            display: flex;
+        }
+
+        /*合格的颜色*/
+        .success {
+            color: #25CCF7;
+        }
+
+        /*不合格、合格率等*/
+        .important {
+            font-size: 18px;
+            color: #ff4d4d;
+        }
+
+        /*未测试的颜色*/
+        .not-tested {
+            color: rgb(192,201,217);
+        }
+
+
+        /*拓扑图*/
+        #divCanvas {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            background: #00000060;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        #divCanvas .canvas-div {
+            position: relative;
+            margin: 0 auto;
+            width: 1000px;
+            overflow: auto;
+        }
+
+        #divCanvas .canvas-div .locationABCD {
+            position: absolute;
+            bottom: 10px;
+            color: #d9f583;
+        }
+
+        #divCanvas .canvas-div .Aend {
+            left: 195px;
+        }
+        #divCanvas .canvas-div .Bend {
+            left: 380px;
+        }
+        #divCanvas .canvas-div .Cend {
+            left: 625px;
+        }
+        #divCanvas .canvas-div .Dend {
+            left: 810px;
+        }
+
+        #divCanvas .canvas-div .Aend::before,
+        #divCanvas .canvas-div .Bend::before,
+        #divCanvas .canvas-div .Cend::before,
+        #divCanvas .canvas-div .Dend::before {
+            content: '';
+            position: absolute;
+            left: 3px;
+            width: 6px;
+            background: #d9f583;
+        }
+
+        #divCanvas .canvas-div .Aend::after,
+        #divCanvas .canvas-div .Bend::after,
+        #divCanvas .canvas-div .Cend::after,
+        #divCanvas .canvas-div .Dend::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -2px;
+            width: 16px;
+            height: 16px;
+            border-top: 8px solid rgba(217,245,131,1);
+            border-left: 8px solid rgba(217,245,131,0);
+            border-right: 8px solid rgba(217,245,131,0);
+            border-bottom: 8px solid rgba(217,245,131,0);
+        }
+
+        #divCanvas .canvas-div .Aend::before,
+        #divCanvas .canvas-div .Dend::before {
+            height: 80px;
+            top: -90px;
+        }
+
+        #divCanvas .canvas-div .Bend::before,
+        #divCanvas .canvas-div .Cend::before {
+            height: 40px;
+            top: -50px;
+        }
+
+        /*偏差和损耗*/
+        #deviation_loss {
+            margin: 15px;
+            display: flex;
+            justify-content: space-evenly;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px #ced6e0;
+        }
+        #deviation_loss .avg_div {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 10px 0;
+            justify-content: center;
+            text-align: center;
+        }
+        #deviation_loss .deviation .smoll_div .flex_between span:nth-child(1),
+        #deviation_loss .deviation .smoll_div .flex_between span:nth-child(2) {
+            margin-right: 15px;
+        }
+        #deviation_loss .avg_div h3 {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        #deviation_loss .avg_div .smoll_div {
+            position: relative;
+            border: 2px solid #d1d8e0;
+            padding: 5px;
+            margin: 10px;
+            transition: all 1s ease;
+        }
+        #deviation_loss .avg_div .smoll_div .flex_even {
+            display: flex;
+            justify-content: space-evenly;
+        }
+        #deviation_loss .avg_div .smoll_div .flex_between,
+        #deviation_loss .avg_div .smollA_B>.flex_even p:not(.title),
+        #deviation_loss .avg_div .smollC_D>.flex_even p:not(.title) {
+            display: flex;
+            justify-content: space-between;
+        }
+        #deviation_loss .avg_div .smoll_div:hover {
+            border: 2px solid #535c68;
+            background: #57606f;
+            color: #fff;
+        }
+        #deviation_loss .avg_div .smoll_div:hover:before {
+            border-top: 2px solid #7efff5;
+            border-left: 2px solid #7efff5;
+        }
+        #deviation_loss .avg_div .smoll_div:hover:after {
+            border-top: 2px solid #7efff5;
+            border-right: 2px solid #7efff5;
+        }
+        #deviation_loss .avg_div .smoll_div:hover .smoll_footer_div::before {
+            border-bottom: 2px solid #7efff5;
+            border-left: 2px solid #7efff5;
+        }
+        #deviation_loss .avg_div .smoll_div:hover .smoll_footer_div::after {
+            border-bottom: 2px solid #7efff5;
+            border-right: 2px solid #7efff5;
+        }
+        #deviation_loss .avg_div .smoll_div::before,
+        #deviation_loss .avg_div .smoll_div::after,
+        #deviation_loss .avg_div .smoll_div .smoll_footer_div::before,
+        #deviation_loss .avg_div .smoll_div .smoll_footer_div::after{
+            content: '';
+            width: 10px;
+            height: 10px;
+            position: absolute;
+            transition: all 1s ease;
+        }
+        #deviation_loss .avg_div .smoll_div::before {
+            top: -2px;
+            left: -2px;
+            border-top: 2px solid #ffaf40;
+            border-left: 2px solid #ffaf40;
+        }
+        #deviation_loss .avg_div .smoll_div::after {
+            top: -2px;
+            right: -2px;
+            border-top: 2px solid #ffaf40;
+            border-right: 2px solid #ffaf40;
+        }
+        #deviation_loss .avg_div .smoll_div .smoll_footer_div {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+        #deviation_loss .avg_div .smoll_div .smoll_footer_div::before {
+            bottom: -2px;
+            left: -7px;
+            border-bottom: 2px solid #ffaf40;
+            border-left: 2px solid #ffaf40;
+        }
+        #deviation_loss .avg_div .smoll_div .smoll_footer_div::after {
+            bottom: -2px;
+            right: 3px;
+            border-bottom: 2px solid #ffaf40;
+            border-right: 2px solid #ffaf40;
+        }
+        #deviation_loss .loss .smollA_B .lossA,
+        #deviation_loss .loss .smollA_B .lossB,
+        #deviation_loss .loss .smollA_B .lossA_B,
+        #deviation_loss .loss .smollC_D .lossC,
+        #deviation_loss .loss .smollC_D .lossD,
+        #deviation_loss .loss .smollC_D .lossC_D,
+        #deviation_loss .deviation .title-passRate-A-container,
+        #deviation_loss .deviation .title-passRate-D-container{
+            margin: 5px;
+            padding: 3px;
+        }
+        #deviation_loss .title,
+        #deviation_loss .deviation .title-A,
+        #deviation_loss .deviation .title-D {
+            margin-bottom: 5px;
+        }
+
+        /*tab页*/
+        .htmleaf-container .demo{
+            padding: 2em 0;
+        }
+        .htmleaf-container .demo .row{
+            margin: 0;
+        }
+        .htmleaf-container a:hover,
+        .htmleaf-container a:focus{
+            text-decoration: none;
+            outline: none;
+        }
+        .htmleaf-container .tab .nav-tabs{
+            border: none;
+            border-bottom: 2px solid #079fc9;
+            margin: 0;
+        }
+        .htmleaf-container .tab .nav-tabs li a{
+            padding: 10px 20px;
+            margin: 0 10px -1px 0;
+            font-size: 17px;
+            font-weight: 600;
+            color: #293241;
+            text-transform: uppercase;
+            border: 2px solid #e6e5e1;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            z-index: 1;
+            position: relative;
+            transition: all 0.3s ease 0s;
+        }
+        .htmleaf-container .tab .nav-tabs li a:hover,
+        .htmleaf-container .tab .nav-tabs li.active a{
+            background: #fff;
+            color: #079fc9;
+            border: 2px solid #079fc9;
+            border-bottom-color: transparent;
+        }
+        .htmleaf-container .tab .nav-tabs li a:before{
+            content: "";
+            display: block;
+            height: 2px;
+            background: #fff;
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            transform: scaleX(0);
+            transition: all 0.3s ease-in-out 0s;
+        }
+        .htmleaf-container .tab .tabs {
+            width: 100%;
+            height: auto;
+            padding: 0;
+        }
+        .htmleaf-container .tab .nav-tabs li.active a:before,
+        .htmleaf-container .tab .nav-tabs li a:hover:before{ transform: scaleX(1); }
+        .htmleaf-container .tab .tab-content{
+            font-size: 17px;
+            color: #6f6f6f;
+            position: relative;
+        }
+        .htmleaf-container #Section3 .tab_bg {
+            margin: 0 15px;
+            padding: 15px;
+        }
+        .htmleaf-container #Section3 .tab_bg .important {
+            margin: 0 10px;
+        }
+        .datagrid {
+            margin: 0px 15px;
+            padding: 15px;
+        }
+        .h2 {
+            position: relative;
+            margin: 10px 30px 0;
+            padding: 5px 0;
+            font-weight: 700;
+        }
+        .h2>.view_history {
+            position: absolute;
+            right: 30px;
+            top: 0;
+            font-weight: 300;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .h2>.view_history .layui-form-switch {
+            height: 23.6px;
+        }
+        #Section4 {
+            background: #003366;
+        }
+        #Section4 .big-decayPoint {
+            width: 90%;
+            margin: 0 auto;
+            max-width: 1200px;
+            display: flex;
+            justify-content: center;
+        }
+        #Section4 #decayPoint {
+            width: 90%;
+            height: 650px;
+            max-width: 1200px;
+        }
+        #Section4 .big-decayPoint .legend {
+            width: 10%;
+            height: 100%;
+        }
+        .legend table {
+            margin-top: 50px;
+            width: 100%;
+        }
+        .legend tbody tr td {
+            padding: 3px;
+        }
+        .legend tbody tr td span {
+            font-size: 14px;
+            color: #fff;
+        }
+        .legend tbody tr td div {
+            width: 30px;
+            height: 5px;
+            border-radius: 4px;
+        }
+        .legend tbody tr:nth-child(1) div {
+            background: var(--high-quality-color-dark);
+        }
+        .legend tbody tr:nth-child(2) div {
+            background: var(--qualified-color-dark);
+        }
+        .legend tbody tr:nth-child(3) div {
+            background: var(--available-color-dark);
+        }
+        .legend tbody tr:nth-child(4) div {
+            background: var(--not-available-color-dark);
+        }
+        .legend tbody tr:nth-child(5) div {
+            background: var(--free-color-dark);
+        }
+        .legend tbody tr:nth-child(6) div {
+            background: var(--not-tested-color-dark);
+        }
+
+        /*滚动条样式*/
+        #gldList::-webkit-scrollbar,
+        .decay::-webkit-scrollbar {
+            /*滚动条整体样式*/
+            width : 10px;  /*高宽分别对应横竖滚动条的尺寸*/
+            height: 1px;
+        }
+        /*滚动条里面小方块*/
+        #gldList::-webkit-scrollbar-thumb,
+        .decay::-webkit-scrollbar-thumb {
+            border-radius   : 10px;
+            background-color: skyblue;
+            background-image: -webkit-linear-gradient(
+                    45deg,
+                    rgba(255, 255, 255, 0.2) 25%,
+                    transparent 25%,
+                    transparent 50%,
+                    rgba(255, 255, 255, 0.2) 50%,
+                    rgba(255, 255, 255, 0.2) 75%,
+                    transparent 75%,
+                    transparent
+            );
+        }
+        /*滚动条里面轨道*/
+        #gldList::-webkit-scrollbar-track,
+        .decay::-webkit-scrollbar-track {
+            box-shadow   : inset 0 0 5px rgba(0, 0, 0, 0.2);
+            background   : #ededed;
+            border-radius: 10px;
+        }
+
+        /*图片显示*/
+        #bigImgParent {
+            width: 550px;
+            height: 400px;
+            max-width: 550px;
+            max-height: 400px;
+            min-width: 200px;
+            min-height: 200px;
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50px;
+            transform: translateY(-50%);
+            z-index: 9;
+        }
+        #bigImgParent .close_img {
+            width: 20px;
+            height: 20px;
+            background-color: #2d3436;
+            border-radius: 50%;
+            position: absolute;
+            right: 0;
+            top: -20px;
+            cursor: pointer;
+        }
+        #bigImgParent .close_img span {
+            border-radius: 5px;
+            display: inline-block;
+            margin-left: 2.5px;
+            width: 100%;
+            height: 100%;
+
+        }
+        #bigImgParent .close_img span::before {
+            content: '';
+            width: 15px;
+            height: 4px;
+            background-color: #fff;
+            border-radius: 5px;
+            position: absolute;
+            top: 4px;
+            transform: rotate(45deg) translateY(3px) translateX(3px);
+        }
+        #bigImgParent .close_img span::after {
+            content: '';
+            width: 15px;
+            height: 4px;
+            background-color: #fff;
+            border-radius: 5px;
+            position: absolute;
+            top: 14px;
+            transform: rotate(135deg) translateY(4px) translateX(-4px);
+        }
+
+        @media screen and (min-width: 1151px) {
+            #bigImgParent {
+                width: 550px;
+                height: 400px;
+            }
+        }
+
+        @media screen and (max-width: 1150px) {
+            .choiceA_Z-show  {
+                width: 53.5%;
+            }
+            .right-show {
+                width: 45%;
+            }
+            #deviation_loss .flex_div {
+                font-size: 13px;
+            }
+            #deviation_loss .avg_div .smoll_div {
+                padding: 3px;
+                margin: 5px;
+            }
+            #deviation_loss .loss .smollA_B .lossA,
+            #deviation_loss .loss .smollA_B .lossB,
+            #deviation_loss .loss .smollA_B .lossA_B,
+            #deviation_loss .loss .smollC_D .lossC,
+            #deviation_loss .loss .smollC_D .lossD,
+            #deviation_loss .loss .smollC_D .lossC_D,
+            #deviation_loss .deviation .title-passRate-A-container,
+            #deviation_loss .deviation .title-passRate-D-container{
+                margin: 3px;
+                padding: 1px;
+            }
+        }
+
+        @media only screen and (max-width: 479px) {
+            .htmleaf-container .tab .nav-tabs {
+                border: none;
+            }
+            .htmleaf-container .tab .nav-tabs li {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 15px;
+            }
+            .htmleaf-container .tab .nav-tabs li a {
+                margin: 0;
+                border-bottom: 2px solid transparent;
+            }
+            .htmleaf-container .tab .nav-tabs li a:before {
+                content: "";
+                width: 100%;
+                height: 2px;
+                background: #079fc9;
+                position: absolute;
+                bottom: -2px;
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="top-show">
+    <div class="choiceA_Z-show">
+        <div class="sys_name">
+            <span class="left_span">组网名：</span>
+        </div>
+        <div id="gldList"></div>
+    </div>
+    <!--组网名和组网规格-->
+    <div class="right-show">
+        <div class="specifications">
+            <span class="left_span">规格：</span>
+            <span id="specification"></span>
+            <span class="left_span sys-health">系统健康度：</span>
+            <span class="system-health"></span>
+            <!--提示说明图标-->
+            <i class="layui-icon layui-icon-tips" title="提示说明">
+                <!--提示说明信息框-->
+                <div class="explain" title="">
+                    <div class="explain_width">
+                        <p>1270为1波</p>
+                        <p>1290为2波</p>
+                        <p>1310为3波</p>
+                        <p>1330为4波</p>
+                        <p>1350为5波</p>
+                        <p>1370为6波</p>
+                        <p>1470为7波</p>
+                        <p>1490为8波</p>
+                        <p>1510为9波</p>
+                        <p>1530为10波</p>
+                        <p>1550为11波</p>
+                        <p>1570为12波</p>
+                    </div>
+                    <div class="explain_qualified">
+                        <p>
+                            <span>中心波长偏差：</span>
+                            <span>波长与标准中心波长相差的绝对值小于1.5nm为合格。</span>
+                        </p>
+                        <p>
+                            <span>通道插入损耗：</span>
+                            <span>分为6波和12波，6波：A端-B端采集数据的绝对值小于1.5dB为合格，C端-D端采集数据的绝对值小于1.5dB为合格。
+                                12波：A端-B端采集数据的绝对值小于2dB为合格，C端-D端采集数据的绝对值小于2dB为合格。</span>
+                        </p>
+                        <p>
+                            <span>全程衰耗：</span>
+                            <span>A端-D端采集数据的绝对值小于等于12为合格。</span>
+                        </p>
+                    </div>
+                </div>
+            </i>
+        </div>
+        <div class="pass-decay">
+            <div class="pass-rate">
+                <!--系统达标率-->
+                <div class="tj">
+                    <div class="fenxi">系统达标率</div>
+                    <canvas id="my_html3" width="150" height="150"></canvas>
+                </div>
+            </div>
+            <!--全程衰耗-->
+            <div class="decay total-attenuation">
+                <button type="button" id="showDecayBtn" onclick="showA_D_decay()" class="layui-btn layui-btn-fluid layui-btn-normal left_span">全程衰耗</button>
+                <div class="A_D_decay">
+                    <p>A-D全程衰耗</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--偏差和损耗-->
+<div id="deviation_loss">
+    <!--偏差-->
+    <div class="avg_div deviation">
+        <div>
+            <h3>中心波长偏差</h3>
+            <div class="head">
+                <p>总合格率</p>
+            </div>
+            <div class="flex_div">
+                <div class="smoll_div">
+                    <p class="title-A">A端</p>
+                    <p class="title-passRate-A">合格率：</p>
+                    <div class="title-passRate-A-container"></div>
+                    <div class="smoll_footer_div"></div>
+                </div>
+                <div class="smoll_div">
+                    <p class="title-D">D端</p>
+                    <p class="title-passRate-D">合格率：</p>
+                    <div class="title-passRate-D-container"></div>
+                    <div class="smoll_footer_div"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--损耗-->
+    <div class="avg_div loss">
+        <div>
+            <h3>通道插入损耗</h3>
+            <div class="head">
+                <p>总达标率</p>
+            </div>
+            <div class="flex_div">
+                <!--A-B-->
+                <div class="smoll_div smollA_B">
+                    <p class="title">A-B插入损耗</p>
+                    <p class="loss_A_B_sum"></p>
+                    <div class="flex_even">
+                        <div class="lossA">
+                            <p class="title">A端</p>
+                        </div>
+                        <div class="lossB">
+                            <p class="title">B端</p>
+                        </div>
+                        <div class="lossA_B">
+                            <p class="title">损耗</p>
+                        </div>
+                    </div>
+                    <div class="smoll_footer_div"></div>
+                </div>
+                <!--C-D-->
+                <div class="smoll_div smollC_D">
+                    <p class="title">C-D插入损耗</p>
+                    <p class="loss_C_D_sum"></p>
+                    <div class="flex_even">
+                        <div class="lossC">
+                            <p class="title">C端</p>
+                        </div>
+                        <div class="lossD">
+                            <p class="title">D端</p>
+                        </div>
+                        <div class="lossC_D">
+                            <p class="title">损耗</p>
+                        </div>
+                    </div>
+                    <div class="smoll_footer_div"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="htmleaf-container">
+    <div class="demo">
+        <div class="row">
+            <div class="tab" role="tabpanel">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a class="Section1" href="#Section1" aria-controls="home" role="tab" data-toggle="tab">数据展示</a></li>
+                    <li role="presentation"><a href="#Section2" aria-controls="profile" role="tab" data-toggle="tab">图形展示</a></li>
+                    <li role="presentation"><a href="#Section3" aria-controls="messages" role="tab" data-toggle="tab">整治报告</a></li>
+                    <li role="presentation"><a class="Section4" href="#Section4" aria-controls="messages" role="tab" data-toggle="tab">图形数据展示</a></li>
+                </ul>
+                <!-- Tab panes -->
+                <div class="tab-content tabs">
+                    <div role="tabpanel" class="tab-pane fade in active" id="Section1">
+                        <h2 class="h2">
+                            组网采集数据表格
+                            <div class="layui-form view_history">
+                                <label class="layui-form-label">历史记录</label>
+                                <div class="layui-input-block">
+                                    <input type="checkbox" name="switch" lay-filter="switch_view_history" lay-skin="switch" lay-text="开启|关闭" onclick="que()">
+                                </div>
+                            </div>
+                        </h2>
+
+                        <table id="dg" style="width: calc(100% - 15px);"></table>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="Section2">
+                        <!--拓扑图-->
+                        <div id="divCanvas">
+                            <div class="canvas-div">
+                                <canvas id="canvas" width="1000" height="550"></canvas>
+                                <!-- 定位于canvas的A、B、C、D端 -->
+                                <div class="locationABCD Aend">A</div>
+                                <div class="locationABCD Bend">B</div>
+                                <div class="locationABCD Cend">C</div>
+                                <div class="locationABCD Dend">D</div>
+                                <!--连接线的颜色-->
+                                <div class="link_color">
+                                    <div>
+                                        <span>合格:</span>
+                                        <span class="span_color yes"></span>
+                                    </div>
+                                    <div>
+                                        <span>不合格:</span>
+                                        <span class="span_color no"></span>
+                                    </div>
+                                    <div>
+                                        <span>无此中心波长:</span>
+                                        <span class="span_color wave_leng"></span>
+                                    </div>
+                                </div>
+                                <!--节点线的提示-->
+                                <div id="tips"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="Section3">
+                        <h2 class="h2">整治报告</h2>
+                        <div class="tab_bg">
+                            <p class="p1"></p><!--组网名和规格-->
+                            <p class="p2">二、系统达标率：</p>
+                            <p class="p3">三、全程衰耗：</p>
+                            <p class="p4">四、中心波长偏差：</p>
+                            <div class="p5-five flex_div">
+                                <p class="p5">
+                                    五、通道插入损耗：
+                                </p>
+                                <div>
+                                    <div class="all-result"></div>
+                                    <div class="A_B-result"></div>
+                                    <div class="C_D-result"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="Section4">
+                        <div class="big-decayPoint">
+                            <div class="legend">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div></div>
+                                            </td>
+                                            <td>
+                                                <span>优质</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div></div>
+                                            </td>
+                                            <td>
+                                                <span>合格</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div></div>
+                                            </td>
+                                            <td>
+                                                <span>可用</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div></div>
+                                            </td>
+                                            <td>
+                                                <span>不可用</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div></div>
+                                            </td>
+                                            <td>
+                                                <span>空闲</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div></div>
+                                            </td>
+                                            <td>
+                                                <span>未测试</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="decayPoint"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--图片放大-->
+<div id="bigImgParent">
+    <div class="close_img" onclick="closeImg()">
+        <span></span>
+    </div>
+    <img class="my-foto" id="bigImg" src="" data-large="" style="width:100%;height:100%;">
+</div>
+
+<script type="text/javascript" src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script type="text/javascript" src="../../js/lay-config.js" charset="utf-8"></script>
+<script type="text/javascript" src="../../js/public.js" charset="utf-8"></script>
+<script type="text/javascript" src="../../lib/easyui-1.7/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../../lib/easyui-1.7/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript" src="../../js/jtopo.js"></script>
+<script type="text/javascript" src="../../js/progress.js"></script>
+<script type="text/javascript" src="../../lib/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../../js/bigImages/zoomsl.min.js"></script>
+
+</body>
+</html>
+
+<script type="text/javascript">
+    // 获取css中定义的变量
+    const root = document.documentElement;
+    let root_computed = getComputedStyle(root);
+    // 提示信息对象
+    var explain = $(".specifications .explain");
+    // 当前窗口的宽高
+    var winWidth = window.innerWidth;
+    var winHeight = window.innerHeight;
+    var newHeight = (winHeight * 0.8) +'px';
+    // 用于保留3位小数的乘除数字
+    var nber = 1000;
+    // 跳转页面传过来的组网id
+    var sysId = localStorage.getItem("sysId");
+    // 规格
+    var specification = localStorage.getItem("specification");
+    // 中心波长偏差达标个数
+    var count_length = 0;
+    // 记录A_D的全程衰耗
+    var totalAttenuationA_D_Variable = [];
+    // 定义一个接收A-B端插入损耗的全局变量
+    var insertionLossA_B_Variable = [];
+    // 插入损耗中A-B、C-D的合格个数
+    var countInsA_B = 0;
+    var countInsC_D = 0;
+    // 定义一个接收C-D端插入损耗的全局变量
+    var insertionLossC_D_Variable = [];
+    // 查询到A,B,C,D端的数据
+    var dataJson;
+    // 存入A端和B端的波长、采集数据(A和B都有)
+    var lengthValueA_B = [];
+    // 存入C端和D端的波长、采集数据(C和D都有)
+    var lengthValueC_D = [];
+    // 系统健康度
+    let systemHealth;
+    // 定义一个全局舞台对象，方便调用
+    var bigStage;
+    // 放大图片的对象
+    var img = "<img class='my-foto' id='bigImg' src='' data-large='' style='width:100%;height:100%;'>";
+
+    layui.use(['form', 'echarts'], function() {
+        var form = layui.form;
+        // 监听查看历史记录的开关
+        form.on('switch(switch_view_history)',function(data){
+            que(data.elem.checked);
+        });
+        $('#specification').text(specification);
+    });
+
+    // 保留小数点后三位
+    function getThree(num) {
+        var s = num + "";
+        if (s.indexOf(".") == -1) {
+            // 没有点
+            return s + ".000";
+        } else if (s.length - s.indexOf(".") >= 4) {
+            // 小数点后大于等于三位
+            return s.substring(0, s.indexOf(".") + 4);
+        } else if (s.length - s.indexOf(".") == 3) {
+            // 小数点后两位
+            return s + "0";
+        } else if (s.length - s.indexOf(".") == 2) {
+            // 小数点后一位
+            return s + "00";
+        }
+    }
+
+    // 鼠标放在提示图标上显示提示信息
+    $(".specifications .layui-icon-tips").hover(
+        function(){
+            explain.show();
+        },
+        function(){
+            explain.hide();
+        }
+    );
+    // 鼠标放在提示信息上显示提示信息
+    explain.hover(
+        function(){
+            explain.show();
+        },
+        function(){
+            explain.hide();
+        }
+    );
+
+    // 全程衰耗按钮点击事件
+    function showA_D_decay() {
+        // 使内容有滑动效果
+        $(".decay .A_D_decay").stop(true,false).slideToggle("slow").unbind('click');
+    }
+
+    // $(window).resize(function () {
+    //     $('#dg').datagrid('resize');
+    // });
+
+    $(".Section1").click(function(){
+        // 如果立刻执行会找不到该容器的宽度
+        setTimeout(function(){
+            $('#dg').datagrid('resize');
+        },300)
+    })
+
+    $(".Section4").click(function(){
+        // 如果立刻执行会找不到该容器的宽度
+        if(dataJson[0].length != 0 && dataJson[1].length != 0 && dataJson[2].length != 0 && dataJson[3].length != 0) {
+            setTimeout(function(){
+                showDecayPointData();
+            },300)
+        }
+    })
+
+    $("#bigImgParent").css({"width": ((winWidth*0.4) + "px"),"height":((winHeight*0.6) + "px")});
+    window.addEventListener("resize", function() {
+        winWidth = window.innerWidth;
+        winHeight = window.innerHeight;
+        newHeight = winHeight * 0.8 +'px';
+        // 只要A端或Z端其中一端存在照片就执行
+        if(document.getElementById("AImg") || document.getElementById("ZImg")) {
+            let w = (winWidth * 0.4) + 'px';
+            let h = (winHeight * 0.6) + 'px';
+            changePicture(w,h);
+        }
+    });
+
+    // 根据组网id查询组网名
+    function selNameById() {
+        var url = fiveGApi + '/sys/selNameById?sysId=' + sysId;
+        mGET(url, function (d) {
+            data = d.data;
+            $(".choiceA_Z-show .sys_name").append("<span>"+data+"</span>");
+            if(data != null){
+                if(specification != ""){
+                    $(".htmleaf-container #Section3 .p1").append("一、"+"<span>"+data+"</span>"+"为"+"<span>"+specification+"</span>"+"规格。");
+                }else {
+                    $(".htmleaf-container #Section3 .p1").append("一、"+"<span>"+data+"</span>"+"暂无规格。");
+                }
+            }
+        });
+    }
+
+    // 中心波长（数据，6合一或12合一，A端为0或D端为3）
+    function waveLengthDeviation(data,len,identification) {
+        var title;
+        var smoll_div;
+        if(identification == 0){
+            title = $("#deviation_loss .deviation .title-passRate-A");
+            smoll_div = $("#deviation_loss .deviation .title-passRate-A-container");
+        }else if(identification == 3){
+            title = $("#deviation_loss .deviation .title-passRate-D");
+            smoll_div = $("#deviation_loss .deviation .title-passRate-D-container");
+        }
+        // 中心波长达标的数组
+        var success_wave_length = [];
+        // 中心波长不达标的数组
+        var error_wave_length = [];
+        // 中心波长未测试的数组
+        var notTestedWaveLength = [];
+        // 合格的波长，采集数据
+        var waveLengthValue;
+        var lenCount = 0;
+        // 当前的达标个数
+        var count_lengthNow = 0;
+        // 只有长度不为0才继续
+        if(data.length != 0){
+            // 规格是6合一，获取前6个波长（12合一就取前12）
+            for(var i = 0; i<len; i++){
+                // 存在数据，已测试过的
+                if(data[i].COLLECT_VALUE != ""){
+                    // 直接判断数据库中的字段
+                    if(data[i].IS_FINE == 1){
+                        // 合格就使中心波长偏差达标个数+1（全部达标个数）
+                        count_length++;
+                        // 当前达标个数
+                        count_lengthNow++;
+                        // 将合格的波长，采集数据组装起来
+                        waveLengthValue = {
+                            WAVE_LENGTH : data[i].WAVE_LENGTH,
+                            COLLECT_VALUE : data[i].COLLECT_VALUE,
+                        }
+                        // 将组装起来的对象添加至中心波长达标的数组中
+                        success_wave_length.push(waveLengthValue);
+                    }else {
+                        // 将不合格的波长，采集数据组装起来
+                        waveLengthValue = {
+                            WAVE_LENGTH : data[i].WAVE_LENGTH,
+                            COLLECT_VALUE : data[i].COLLECT_VALUE,
+                        }
+                        // 将组装起来的对象添加至中心波长不达标的数组中
+                        error_wave_length.push(waveLengthValue);
+                    }
+                } else { // 未测试
+                    // 将未测试的波长，采集数据组装起来
+                    waveLengthValue = {
+                        WAVE_LENGTH : data[i].WAVE_LENGTH,
+                        COLLECT_VALUE : data[i].COLLECT_VALUE,
+                    }
+                    // 将组装起来的对象添加至中心波长未测试的数组中
+                    notTestedWaveLength.push(waveLengthValue);
+                    lenCount++;
+                }
+            }
+            len = len - lenCount;
+            // 使用中心波长偏差达标个数/长度*100则为达标率
+            title.append("<span class='important'>"+(parseInt(count_lengthNow/len*100) +"%")+"</span>");
+            $(".htmleaf-container #Section3 .p4").append("达标率为"+"<span class='important'>"+(parseInt(count_lengthNow/len*100) +"%")+"</span>");
+            var ss;
+            // 判断合格的中心波长数组中是否有数据
+            if(success_wave_length.length != 0){
+                // 循环遍历success_wave_length
+                $.each(success_wave_length, function(index, value) {
+                    ss = "<p class='flex_between'>"
+                        +"<span>"+ value.WAVE_LENGTH + "nm" + "</span>"
+                        +"<span>"+ value.COLLECT_VALUE + "dB" + "</span>"
+                        +"<span class='success'>"+ "合格" + "</span>"
+                        +"</p>";
+                    smoll_div.append(ss);
+                });
+            }
+            // 判断未测试的中心波长数组中是否有数据
+            if(notTestedWaveLength.length != 0){
+                // 循环遍历notTestedWaveLength
+                $.each(notTestedWaveLength, function(index, value) {
+                    ss = "<p class='flex_between'>"
+                        +"<span>"+ value.WAVE_LENGTH + "nm" + "</span>"
+                        +"<span>"+ value.COLLECT_VALUE + "</span>"
+                        +"<span class='not-tested'>"+ "未测试" + "</span>"
+                        +"</p>";
+                    smoll_div.append(ss);
+                });
+            }
+            // 判断不合格的中心波长数组中是否有数据
+            if(error_wave_length.length != 0){
+                // 循环遍历error_wave_length
+                $.each(error_wave_length, function(index, value) {
+                    ss = "<p class='flex_between'>"
+                        +"<span class='important'>"+ value.WAVE_LENGTH + "nm" +"</span>"
+                        +"<span class='important'>"+ value.COLLECT_VALUE + "dB" + "</span>"
+                        +"<span class='important'>"+ "不合格" + "</span>"
+                        +"</p>";
+                    smoll_div.append(ss);
+                    $(".htmleaf-container #Section3 .p4").append(ss);
+                });
+            }
+        }
+        return len;
+    }
+
+    // 全程衰耗（数据：data[0]为A端  data[3]为D端，6合一或12合一）
+    function totalAttenuation(data,len) {
+        // data[0][0].COLLECT_VALUE = "";
+        // data[1][0].COLLECT_VALUE = "";
+        // data[2][0].COLLECT_VALUE = "";
+        // data[3][0].COLLECT_VALUE = "";
+        // data[0][1].COLLECT_VALUE = "";
+        // data[1][2].COLLECT_VALUE = "";
+        // data[2][3].COLLECT_VALUE = "";
+        // data[3][4].COLLECT_VALUE = "";
+        // data[3][5].COLLECT_VALUE = "-15.11";
+        // A和D端的采集数据
+        var a = [];
+        var d = [];
+
+        var totalAttenuationA_D;
+        // 全程衰耗合格的个数
+        var count_A_D = 0;
+
+        // 循环A端的采集数据,规格为6合一，只获取前6条数据（12合一就取前12）
+        for(var i = 0; i<len; i++){
+            a.push(data[0][i].COLLECT_VALUE);
+        }
+        // 循环D端的采集数据,规格为6合一，只获取前6条数据（12合一就取前12）
+        for(var i = 0; i<len; i++){
+            d.push(data[3][i].COLLECT_VALUE);
+        }
+        // 循环比较A和D端的值
+        for(var i = 0; i<a.length; i++) {
+            if (a[i] != null && a[i] != "" && d[i] != null && d[i] != "") {
+                if (Math.abs(a[i] - d[i]) <= 12) {
+                    // 全程衰耗合格的个数+1
+                    count_A_D++;
+                    $(".decay .A_D_decay").append("<p class='success'>" + (data[0][i].WAVE_LENGTH + "合格,损耗为" + getThree(Math.floor(Math.abs((a[i] * nber - d[i] * nber) / nber) * nber) / nber) + "(dB)") + "</p>");
+
+                    totalAttenuationA_D = {
+                        WAVE_LENGTH: data[0][i].WAVE_LENGTH,
+                        COLLECT_VALUEA: a[i],
+                        COLLECT_VALUED: d[i],
+                        DECAY: getThree(Math.floor(Math.abs((a[i] * nber - d[i] * nber) / nber) * nber) / nber)
+                    }
+                    totalAttenuationA_D_Variable.push(totalAttenuationA_D);
+                } else {
+                    // 不合格就将不合格的波长和对应的衰耗值给显示出来
+                    $(".decay .A_D_decay").append("<p class='important'>" + (data[0][i].WAVE_LENGTH + "不合格，损耗为" + getThree(Math.floor(Math.abs((a[i] * nber - d[i] * nber) / nber) * nber) / nber) + "(dB)") + "</p>");
+                    $(".htmleaf-container #Section3 .p3").append("<span class='important'>" + (data[0][i].WAVE_LENGTH + "不合格，损耗为" + getThree(Math.floor(Math.abs((a[i] * nber - d[i] * nber) / nber) * nber) / nber) + "(dB)") + "</span>");
+
+                    totalAttenuationA_D = {
+                        WAVE_LENGTH: data[0][i].WAVE_LENGTH,
+                        COLLECT_VALUEA: a[i],
+                        COLLECT_VALUED: d[i],
+                        DECAY: getThree(Math.floor(Math.abs((a[i] * nber - d[i] * nber) / nber) * nber) / nber)
+                    }
+                    totalAttenuationA_D_Variable.push(totalAttenuationA_D);
+                }
+            } else {
+                // A或D中存在空值
+                totalAttenuationA_D = {
+                    WAVE_LENGTH: data[0][i].WAVE_LENGTH,
+                    COLLECT_VALUEA: a[i],
+                    COLLECT_VALUED: d[i],
+                    DECAY: "未测试"
+                }
+                totalAttenuationA_D_Variable.push(totalAttenuationA_D);
+                if(a[i] == "" && d[i] == "") {
+                    $(".decay .A_D_decay").append("<p class='not-tested'>" + data[0][i].WAVE_LENGTH + "，A、D端未测试" + "</p>");
+                } else {
+                    if(a[i] == "") {
+                        $(".decay .A_D_decay").append("<p class='not-tested'>" + data[0][i].WAVE_LENGTH + "，A端未测试" + "</p>");
+                    }else {
+                        $(".decay .A_D_decay").append("<p class='not-tested'>" + data[0][i].WAVE_LENGTH + "，D端未测试" + "</p>");
+                    }
+                }
+                // 未测试就将总长度-1
+                len--;
+            }
+        }
+        var systemQualified = parseInt(count_A_D / len * 100);
+        // 将全程衰耗的合格率赋值给系统健康度
+        systemHealth = systemQualified;
+        // 根据传过来的len长度减去全程衰耗合格的个数就得出不合格的全程衰耗个数
+        systemHealth = systemHealth - (len - count_A_D);
+        $(".htmleaf-container #Section3 .p2").append("<span class='important'>"+ (parseInt(count_A_D / len * 100))+ "%" +"</span>");
+        $(".htmleaf-container #Section3 .p3").append("达标率" + "<span class='important'>"+ (parseInt(count_A_D / len * 100))+ "%" +"</span>");
+        // 圆的颜色
+        var circleColor;
+        if(systemQualified<= 100 && systemQualified>=90){
+            circleColor = '#32ff7e';
+        }else if(systemQualified>=80){
+            circleColor = '#fffa65';
+        }else if(systemQualified>=70){
+            circleColor = '#ffa502';
+        }else {
+            circleColor = '#ff4d4d';
+        }
+        // 使用全程衰耗合格的个数/6*100则为系统达标率
+        var p1 = new Progress({
+            el: 'my_html3', //canvas元素id
+            deg: systemQualified, //绘制角度
+            timer: 6, //绘制时间
+            lineWidth: 15, //线宽
+            lineBgColor: '#95afc0', //底圆颜色
+            lineColor: circleColor, //动态圆颜色
+            textColor: '#1e90ff', //文本颜色
+            fontSize: 28, //字体大小
+            circleRadius: 75 //圆半径
+        });
+    }
+
+    // 插入损耗A-B（A端，B端，6合一或12合一，合格的标准）
+    function insertionLossA_B(first,last,len,standard) {
+        // 插入损耗A、B端采集数据
+        var insA = [];
+        var insB = [];
+
+        // 存入合格的插入损耗A、B端（波长及采集数据）
+        var successInsA = [];
+        var successInsB = [];
+        // 存入不合格的插入损耗A、B端（波长及采集数据）
+        var errorInsA = [];
+        var errorInsB = [];
+        // 存入未测试
+        var notTestedA = [];
+        var notTestedB = [];
+
+        // A端和B端（波长和对应采集的数据,只能存一组）
+        var waveLengthAValue;
+        var waveLengthBValue;
+
+        // A端和B端（波长和对应采集的数据,存所有）
+        var AllwaveLengthAValue = [];
+        var AllwaveLengthBValue = [];
+
+        // 存放A和B的值
+        var waveLengthA_BValue = [];
+
+        // 拓扑图中节点之间的连接线
+        var findLink = bigStage.find('link');
+
+        // 只有A和B端都存在才可以
+        if(first.length != 0 && last[1].length != 0){
+            // 循环A端的采集数据,规格为6合一，只获取前6条数据（12合一就取前12）
+            for(var i = 0; i<len; i++){
+                insA.push(first[i].COLLECT_VALUE);
+                // 将A点的波长和采集数据赋给对象
+                waveLengthAValue = {
+                    WAVE_LENGTH : first[i].WAVE_LENGTH,
+                    COLLECT_VALUE : first[i].COLLECT_VALUE
+                }
+                // 将对象存入A点波长和采集数据的数组中
+                AllwaveLengthAValue.push(waveLengthAValue);
+            }
+            // 将A点波长和采集数据的数组存入A_B点波长和采集数据的数组中
+            lengthValueA_B.push(AllwaveLengthAValue);
+            // 循环B端的采集数据,规格为6合一，只获取前6条数据（12合一就取前12）
+            for(var i = 0; i<len; i++){
+                insB.push(last[i].COLLECT_VALUE);
+                waveLengthBValue = {
+                    WAVE_LENGTH : last[i].WAVE_LENGTH,
+                    COLLECT_VALUE : last[i].COLLECT_VALUE
+                }
+                AllwaveLengthBValue.push(waveLengthBValue);
+            }
+            lengthValueA_B.push(AllwaveLengthBValue);
+            // 循环比较A和B端的值
+            for(var i = 0; i<insA.length; i++){
+                if (insA[i] != null && insA[i] != "" && insB[i] != null && insB[i] != "") {
+                    if (Math.abs(insA[i] - insB[i]) < standard) {
+                        // A-B端插入损耗合格个数+1
+                        countInsA_B++;
+                        // 合格就将A端和B端的波长,对应采集的数据和损耗存入合格数组（损耗只存在A端）
+                        waveLengthAValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUE: insA[i],
+                            LOSS: getThree(Math.floor(Math.abs((insA[i] * nber - insB[i] * nber) / nber) * nber) / nber)
+                        }
+                        waveLengthBValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUE: insB[i]
+                        }
+                        successInsA.push(waveLengthAValue);
+                        successInsB.push(waveLengthBValue);
+                        waveLengthA_BValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUEA: insA[i],
+                            COLLECT_VALUEB: insB[i],
+                            LOSS: getThree(Math.floor(Math.abs((insA[i] * nber - insB[i] * nber) / nber) * nber) / nber),
+                            IDENTIFICATION: 0 // 是否合格（合格为0，反之为1）
+                        }
+                        // 将插入损耗的值传给插入损耗全局数组变量
+                        insertionLossA_B_Variable.push(waveLengthA_BValue);
+                    } else {
+                        // 不合格就将A端和B端的波长,对应采集和损耗的数据存入不合格数组（损耗只存在A端）
+                        waveLengthAValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUE: insA[i],
+                            LOSS: getThree(Math.floor(Math.abs((insA[i] * nber - insB[i] * nber) / nber) * nber) / nber)
+                        }
+                        waveLengthBValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUE: insB[i]
+                        }
+                        errorInsA.push(waveLengthAValue);
+                        errorInsB.push(waveLengthBValue);
+                        waveLengthA_BValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUEA: insA[i],
+                            COLLECT_VALUEB: insB[i],
+                            LOSS: getThree(Math.floor(Math.abs((insA[i] * nber - insB[i] * nber) / nber) * nber) / nber),
+                            IDENTIFICATION: 1
+                        }
+                        // 将插入损耗的值传给插入损耗全局数组变量
+                        insertionLossA_B_Variable.push(waveLengthA_BValue);
+                    }
+                } else {
+                    // A或B端存在空值
+                    waveLengthAValue = {
+                        WAVE_LENGTH: first[i].WAVE_LENGTH,
+                        COLLECT_VALUE: insA[i],
+                        LOSS: "未测试"
+                    }
+                    waveLengthBValue = {
+                        WAVE_LENGTH: first[i].WAVE_LENGTH,
+                        COLLECT_VALUE: insB[i]
+                    }
+                    // 存入未测试的数组中
+                    notTestedA.push(waveLengthAValue);
+                    notTestedB.push(waveLengthBValue);
+                    waveLengthA_BValue = {
+                        WAVE_LENGTH: first[i].WAVE_LENGTH,
+                        COLLECT_VALUEA: insA[i],
+                        COLLECT_VALUEB: insB[i],
+                        LOSS: "未测试",
+                        IDENTIFICATION: 2 // 2为未测试，提示
+                    }
+                    // 将插入损耗的值传给插入损耗全局数组变量
+                    insertionLossA_B_Variable.push(waveLengthA_BValue);
+                    len--;
+                }
+                // 将合格的线变为蓝色不合格的线变成红色
+                for(var j = 0; j<findLink.length; j++){
+                    if(findLink[j].typeId == "A" && findLink[j].name.substring(0,4) == first[i].WAVE_LENGTH){
+                        if(first[i].IS_FINE == 1){
+                            findLink[j].strokeColor = "24,220,255";
+                            break;
+                        }else {
+                            findLink[j].strokeColor = "255,77,77";
+                            break;
+                        }
+                    }
+                }
+            }
+            var ss;
+            // 判断合格的插入损耗数组中是否有数据
+            if(successInsA.length != 0 ){
+                $("#deviation_loss .loss .smollA_B .loss_A_B_sum").append("合格率:&nbsp;&nbsp;"+ "<span class='important'>"+ (parseInt(countInsA_B / len * 100) + "%") + "</span>");
+                $(".htmleaf-container #Section3 .p5-five.flex_div .A_B-result").append("A-B合格率为"+"<span class='important'>"+(parseInt(countInsA_B / len * 100) + "%")+"</span>");
+                // 循环遍历successInsA
+                $.each(successInsA, function(index, value) {
+                    // A端波长，采集数据
+                    ss = "<p>"
+                        +"<span>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollA_B .lossA").append(ss);
+                    // A-B端的损耗
+                    ss = "<p>"
+                        +"<span class='success'>"+ value.LOSS +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollA_B .lossA_B").append(ss);
+                });
+            }else {
+                // 如果A端没有合格的就说明A-B端的合格率为0
+                $("#deviation_loss .loss .smollA_B .loss_A_B_sum").append("<span class='important'>"+ "0%" +"</span>");
+                $(".htmleaf-container #Section3 .p5-five.flex_div .A_B-result").append("达标率为"+"<span class='important'>"+ "0%" +"</span>");
+            }
+
+            if(successInsB.length != 0 ){
+                // 循环遍历successInsB
+                $.each(successInsB, function(index, value) {
+                    ss = "<p>"
+                        +"<span>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollA_B .lossB").append(ss);
+                });
+            }
+
+            // 判断未测试的插入损耗数组中是否有数据
+            if(notTestedA.length != 0 ) {
+                // 循环遍历
+                $.each(notTestedA, function(index, value) {
+                    // A端波长，采集数据
+                    ss = "<p>"
+                        +"<span class='not-tested'>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollA_B .lossA").append(ss);
+                    // A-B端的损耗
+                    ss = "<p>"
+                        +"<span class='not-tested'>"+ value.LOSS+"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollA_B .lossA_B").append(ss);
+
+                    ss = "<span class='not-tested'>"+ "波长" + value.WAVE_LENGTH + "(nm)，损耗" + value.LOSS + "</span>";
+                    $(".htmleaf-container #Section3 .p5-five.flex_div .A_B-result").append(ss);
+                });
+            }
+
+            if(notTestedB.length != 0 ) {
+                // 循环遍历
+                $.each(notTestedB, function(index, value) {
+                    ss = "<p>"
+                        +"<span class='not-tested'>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollA_B .lossB").append(ss);
+                });
+            }
+
+            // 判断不合格的插入损耗数组中是否有数据
+            if(errorInsA.length != 0 ) {
+                // 循环遍历
+                $.each(errorInsA, function(index, value) {
+                    // A端波长，采集数据
+                    ss = "<p>"
+                        +"<span class='important'>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollA_B .lossA").append(ss);
+                    // A-B端的损耗
+                    ss = "<p>"
+                        +"<span class='important'>"+ value.LOSS+"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollA_B .lossA_B").append(ss);
+
+                    ss = "<span class='important'>"+ "波长" + value.WAVE_LENGTH + "(nm)，损耗" + value.LOSS + "(dB)" + "</span>";
+                    $(".htmleaf-container #Section3 .p5-five.flex_div .A_B-result").append(ss);
+                });
+            }
+
+            if(errorInsB.length != 0 ) {
+                // 循环遍历
+                $.each(errorInsB, function(index, value) {
+                    ss = "<p>"
+                        +"<span class='important'>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollA_B .lossB").append(ss);
+                });
+            }
+        }
+        return len;
+    }
+
+    // 插入损耗C-D（C端，D端，6合一或12合一，合格的标准）
+    function insertionLossC_D(first,last,len,standard) {
+        // 插入损耗C、D端采集数据
+        var insC = [];
+        var insD = [];
+
+        // 存入合格的插入损耗C、D端（波长及采集数据）
+        var successInsC = [];
+        var successInsD = [];
+        // 存入失败的插入损耗C、D端（波长及采集数据）
+        var errorInsC = [];
+        var errorInsD = [];
+        // 存入未测试
+        var notTestedC = [];
+        var notTestedD = [];
+
+        // 合格的C端和D端（波长和对应采集的数据）
+        var waveLengthCValue;
+        var waveLengthDValue;
+
+        // C端和D端（波长和对应采集的数据,存所有）
+        var AllwaveLengthCValue = [];
+        var AllwaveLengthDValue = [];
+
+        // 存放C和D的值
+        var waveLengthC_DValue = [];
+
+        // 拓扑图中节点之间的连接线
+        var findLink = bigStage.find('link');
+
+        // 只有C和D端都存在才可以
+        if(first.length != 0 && last[1].length != 0){
+            // 循环C端的采集数据,规格为6合一，只获取前6条数据（12合一就取前12）
+            for(var i = 0; i<len; i++){
+                insC.push(first[i].COLLECT_VALUE);
+                // 将C点的波长和采集数据赋给对象
+                waveLengthCValue = {
+                    WAVE_LENGTH : first[i].WAVE_LENGTH,
+                    COLLECT_VALUE : first[i].COLLECT_VALUE
+                }
+                // 将对象存入C点波长和采集数据的数组中
+                AllwaveLengthCValue.push(waveLengthCValue);
+            }
+            // 将C点波长和采集数据的数组存入C_D点波长和采集数据的数组中
+            lengthValueC_D.push(AllwaveLengthCValue);
+            // 循环D端的采集数据,规格为6合一，只获取前6条数据（12合一就取前12）
+            for(var i = 0; i<len; i++){
+                insD.push(last[i].COLLECT_VALUE);
+                waveLengthDValue = {
+                    WAVE_LENGTH : last[i].WAVE_LENGTH,
+                    COLLECT_VALUE : last[i].COLLECT_VALUE
+                }
+                AllwaveLengthDValue.push(waveLengthDValue);
+            }
+            lengthValueC_D.push(AllwaveLengthDValue);
+            // 循环比较C和D端的值
+            for(var i = 0; i<insC.length; i++){
+                if (insC[i] != null && insC[i] != "" && insD[i] != null && insD[i] != "") {
+                    if (Math.abs(insC[i] - insD[i]) < standard) {
+                        // C-D端插入损耗合格个数+1
+                        countInsC_D++;
+                        // 合格就将C端和D端的波长,对应采集的数据和损耗存入合格数组（损耗只存在C端）
+                        waveLengthCValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUE: insC[i],
+                            LOSS: getThree(Math.floor(Math.abs((insC[i] * nber - insD[i] * nber) / nber) * nber) / nber)
+                        }
+                        waveLengthDValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUE: insD[i]
+                        }
+                        successInsC.push(waveLengthCValue);
+                        successInsD.push(waveLengthDValue);
+                        waveLengthC_DValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUEC: insC[i],
+                            COLLECT_VALUED: insD[i],
+                            LOSS: getThree(Math.floor(Math.abs((insC[i] * nber - insD[i] * nber) / nber) * nber) / nber),
+                            IDENTIFICATION: 0  // 是否合格（合格为0，反之为1）
+                        }
+                        // 将插入损耗的值传给插入损耗全局数组变量
+                        insertionLossC_D_Variable.push(waveLengthC_DValue);
+                    } else {
+                        // 不合格就将C端和D端的波长,对应采集和损耗的数据存入不合格数组（损耗只存在C端）
+                        waveLengthCValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUE: insC[i],
+                            LOSS: getThree(Math.floor(Math.abs((insC[i] * nber - insD[i] * nber) / nber) * nber) / nber)
+                        }
+                        waveLengthDValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUE: insD[i]
+                        }
+                        errorInsC.push(waveLengthCValue);
+                        errorInsD.push(waveLengthDValue);
+                        waveLengthC_DValue = {
+                            WAVE_LENGTH: first[i].WAVE_LENGTH,
+                            COLLECT_VALUEC: insC[i],
+                            COLLECT_VALUED: insD[i],
+                            LOSS: getThree(Math.floor(Math.abs((insC[i] * nber - insD[i] * nber) / nber) * nber) / nber),
+                            IDENTIFICATION: 1
+                        }
+                        // 将插入损耗的值传给插入损耗全局数组变量
+                        insertionLossC_D_Variable.push(waveLengthC_DValue);
+                    }
+                } else {
+                    // C或D端存在空值
+                    waveLengthCValue = {
+                        WAVE_LENGTH: first[i].WAVE_LENGTH,
+                        COLLECT_VALUE: insC[i],
+                        LOSS: "未测试"
+                    }
+                    waveLengthDValue = {
+                        WAVE_LENGTH: first[i].WAVE_LENGTH,
+                        COLLECT_VALUE: insD[i]
+                    }
+                    notTestedC.push(waveLengthCValue);
+                    notTestedD.push(waveLengthDValue);
+                    waveLengthC_DValue = {
+                        WAVE_LENGTH: first[i].WAVE_LENGTH,
+                        COLLECT_VALUEC: insC[i],
+                        COLLECT_VALUED: insD[i],
+                        LOSS: "未测试",
+                        IDENTIFICATION: 2
+                    }
+                    // 将插入损耗的值传给插入损耗全局数组变量
+                    insertionLossC_D_Variable.push(waveLengthC_DValue);
+                    len--;
+                }
+
+                // 将合格的线变为蓝色不合格的线变成红色
+                for(var j = 0; j<findLink.length; j++){
+                    if(findLink[j].typeId == "D" && findLink[j].name.substring(0,4) == last[i].WAVE_LENGTH){
+                        if(last[i].IS_FINE == 1){
+                            findLink[j].strokeColor = "24,220,255";
+                            break;
+                        }else {
+                            findLink[j].strokeColor = "255,77,77";
+                            break;
+                        }
+                    }
+                }
+            }
+            var ss;
+            // 判断合格的插入损耗数组中是否有数据
+            if(successInsC.length != 0 ){
+                $("#deviation_loss .loss .smollC_D .loss_C_D_sum").append("合格率:&nbsp;&nbsp;"+ "<span class='important'>"+ (parseInt(countInsC_D / len * 100) + "%") + "</span>");
+                $(".htmleaf-container #Section3 .p5-five.flex_div .C_D-result").append("C-D合格率为"+"<span class='important'>"+(parseInt(countInsC_D / len * 100) + "%")+"</span>");
+                // 循环遍历successInsC
+                $.each(successInsC, function(index, value) {
+                    // C端波长，采集数据
+                    ss = "<p>"
+                        +"<span>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollC_D .lossC").append(ss);
+                    // C-D端的损耗
+                    ss = "<p>"
+                        +"<span class='success'>"+ value.LOSS +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollC_D .lossC_D").append(ss);
+                });
+            }else {
+                // 如果C端没有合格的就说明C-D端的合格率为0
+                $("#deviation_loss .loss .smollC_D .loss_C_D_sum").append("<span class='important'>"+ "0%" +"</span>");
+                $(".htmleaf-container #Section3 .p5-five.flex_div .C_D-result").append("达标率为"+"<span class='important'>"+ "0%" +"</span>");
+            }
+
+            if(successInsD.length != 0 ){
+                // 循环遍历successInsD
+                $.each(successInsD, function(index, value) {
+                    ss = "<p>"
+                        +"<span>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollC_D .lossD").append(ss);
+                });
+            }
+
+            // 判断不合格的插入损耗数组中是否有数据
+            if(notTestedC.length != 0 ) {
+                // 循环遍历
+                $.each(notTestedC, function(index, value) {
+                    // C端波长，采集数据
+                    ss = "<p>"
+                        +"<span class='not-tested'>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollC_D .lossC").append(ss);
+                    // C-D端的损耗
+                    ss = "<p>"
+                        +"<span class='not-tested'>"+ value.LOSS+"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollC_D .lossC_D").append(ss);
+
+                    ss = "<span class='not-tested'>"+ "波长" + value.WAVE_LENGTH + "(nm)，损耗" + value.LOSS + "</span>";
+                    $(".htmleaf-container #Section3 .p5-five.flex_div .C_D-result").append(ss);
+                });
+            }
+
+            if(notTestedD.length != 0 ) {
+                // 循环遍历
+                $.each(notTestedD, function(index, value) {
+                    ss = "<p>"
+                        +"<span class='not-tested'>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollC_D .lossD").append(ss);
+                });
+            }
+
+            // 判断不合格的插入损耗数组中是否有数据
+            if(errorInsC.length != 0 ) {
+                // 循环遍历
+                $.each(errorInsC, function(index, value) {
+                    // C端波长，采集数据
+                    ss = "<p>"
+                        +"<span class='important'>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollC_D .lossC").append(ss);
+                    // C-D端的损耗
+                    ss = "<p>"
+                        +"<span class='important'>"+ value.LOSS+"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollC_D .lossC_D").append(ss);
+
+                    ss = "<span class='important'>"+ "波长" + value.WAVE_LENGTH + "(nm)，损耗" + value.LOSS + "(dB)" + "</span>";
+                    $(".htmleaf-container #Section3 .p5-five.flex_div .C_D-result").append(ss);
+                });
+            }
+
+            if(errorInsD.length != 0 ) {
+                // 循环遍历
+                $.each(errorInsD, function(index, value) {
+                    ss = "<p>"
+                        +"<span class='important'>"+ value.WAVE_LENGTH + "&nbsp;&nbsp;&nbsp;&nbsp;" + value.COLLECT_VALUE +"</span>"
+                        +"</p>";
+                    $("#deviation_loss .loss .smollC_D .lossD").append(ss);
+                });
+            }
+        }
+        return len;
+    }
+
+    // 查询各种合格率
+    function selPassRate() {
+        var url = fiveGApi + "/collectionData/selCollectionDataBySysId?sysId=" + sysId;
+        mGET(url, function (d) {
+            data = d.data;
+            // 将查询到的结果赋给全局变量，方便调用
+            // data是一个数组，data[0]是A端，data[1]是B端，data[2]是C端，data[3]是D端
+            dataJson = data;
+            // 只有查询到的结果存在值才继续
+            if(data[0].length != 0 || data[1].length != 0 || data[2].length != 0 || data[3].length != 0){
+                // 判断A、B、C、D端存不存在
+                if(data[0].length == 0){
+                    $("#deviation_loss .deviation .smoll_div").eq(0).append("<p>" + "A端无数据" + "</p>");
+                    $("#deviation_loss .loss .smollA_B .lossA").append("<p>" + "A端无数据" + "</p>");
+                    $(".right-show .pass-decay .decay .A_D_decay").append("<p>" + "A端无数据" + "</p>");
+                    $(".htmleaf-container #Section3 .p2").append("<span>"+ "A端无数据。" +"</span>");
+                    $(".htmleaf-container #Section3 .p3").append("<span>"+ "A端无数据。" +"</span>");
+                    $(".htmleaf-container #Section3 .p5-five div").append("<span>"+ "A端无数据。" +"</span>");
+                }
+                if(data[1].length == 0){
+                    $("#deviation_loss .loss .smollA_B .lossB").append("<p>" + "B端无数据" + "</p>");
+                    $(".htmleaf-container #Section3 .p5-five div").append("<span>"+ "B端无数据。" +"</span>");
+                }
+                if(data[2].length == 0){
+                    $("#deviation_loss .loss .smollC_D .lossC").append("<p>" + "C端无数据" + "</p>");
+                    $(".htmleaf-container #Section3 .p5-five div").append("<span>"+ "C端无数据。" +"</span>");
+                }
+                if(data[3].length == 0){
+                    $("#deviation_loss .deviation .smoll_div").eq(1).append("<p>" + "D端无数据" + "</p>");
+                    $("#deviation_loss .loss .smollC_D .lossD").append("<p>" + "D端无数据" + "</p>");
+                    $(".right-show .pass-decay .decay .A_D_decay").append("<p>" + "D端无数据" + "</p>");
+                    $(".htmleaf-container #Section3 .p2").append("<span>"+ "D端无数据。" +"</span>");
+                    $(".htmleaf-container #Section3 .p3").append("<span>"+ "D端无数据。" +"</span>");
+                    $(".htmleaf-container #Section3 .p5-five div").append("<span>"+ "D端无数据。" +"</span>");
+                }
+
+                // 全程衰耗
+                // 中心波长偏差合格率
+                // 判断组网规格
+                // 只有A和D端都存在才可以继续
+                if(data[0].length != 0 && data[3].length != 0) {
+                    if(specification == '6合一') {
+                        const len = 6;
+                        // const len = 12;
+                        totalAttenuation(data,len);
+                        // 中心波长偏差（数据，6合一就传6，12合一就传12,标识（0:A端  3:D端））
+                        // A端总个数
+                        const lenA = waveLengthDeviation(data[0],len,0);
+                        // D端总个数
+                        const lenD = waveLengthDeviation(data[3],len,3);
+                        $("#deviation_loss .deviation .head p").append("<span class='important'>"+ (parseInt((count_length)/ (lenA + lenD) * 100) + "%") +"</span>");
+                        systemHealth = systemHealth - (((lenA + lenD) - count_length) * 2);
+                    }else if(specification == '12合一'){
+                        const len = 12;
+                        totalAttenuation(data,len);
+                        const lenA = waveLengthDeviation(data[0],len,0);
+                        const lenD = waveLengthDeviation(data[3],len,3);
+                        $("#deviation_loss .deviation .head p").append("<span class='important'>"+ (parseInt((count_length)/ (lenA + lenD) * 100) + "%") +"</span>");
+                        systemHealth = systemHealth - (((lenA + lenD) - count_length) * 2);
+                    }
+                }
+
+                // 判断组网规格
+                // 插入损耗
+                // 组网规格为6合一
+                if(specification == '6合一'){
+                    const len = 6;
+                    // const len = 12;
+                    // 插入损耗(数据，6合一，达标的标准)
+                    repeat(data,len,1.5);
+                }else if(specification == '12合一'){
+                    const len = 12;
+                    repeat(data,len,2);
+                }
+
+                // 只要A、B、C、D端有一个没有值就将系统健康度设为无
+                if(data[0].length == 0 || data[1].length == 0 || data[2].length == 0 || data[3].length == 0) {
+                    // 将最终的系统健康度传给页面
+                    $(".system-health").text("无");
+                }
+            }else {
+                $("#deviation_loss .deviation div").empty().append("<h3>" + "中心波长偏差" + "</h3>").append("<span >" + "无数据" + "</span>");
+                $("#deviation_loss .loss div").empty().append("<h3>" + "通道插入损耗" + "</h3>").append("<span >" + "无数据" + "</span>");
+                $(".right-show .pass-decay .decay").empty().append("<button type='button' id='showDecayBtn' onclick='showA_D_decay()' class='layui-btn layui-btn-fluid layui-btn-normal'>" + "全程衰耗" + "</button>").append("<div class='A_D_decay'>" + "无数据" + "</div>");
+                $(".htmleaf-container #Section3 .p2").append("<span>"+ "无数据。" +"</span>");
+                $(".htmleaf-container #Section3 .p3").append("<span>"+ "无数据。" +"</span>");
+                $(".htmleaf-container #Section3 .p4").append("<span>"+ "无数据。" +"</span>");
+                $(".htmleaf-container #Section3 .p5").append("<span>"+ "无数据。" +"</span>");
+                // 将最终的系统健康度传给页面
+                $(".system-health").text("无");
+            }
+        });
+    }
+
+    // (data:数据 len:6合一就是6,12合一就为12 standard:计算达标的标准)
+    function repeat(data,len,standard){
+        // A-B的插入损耗
+        var lenOne = insertionLossA_B(data[0],data[1],len,standard);
+        // C-D的插入损耗
+        var lenTwo = insertionLossC_D(data[2],data[3],len,standard);
+        // 只有A、B、C、D端都存在数据才计算总达标率和系统健康度
+        if(data[0].length != 0 && data[1].length != 0 && data[2].length != 0 && data[3].length != 0){
+            $("#deviation_loss .loss .head p").append("<span class='important'>"+ (parseInt((countInsA_B + countInsC_D)/ (lenOne + lenTwo) * 100) + "%") +"</span>");
+            $("#Section3 .all-result").append("总达标率"+ "<span class='important'>"+ (parseInt((countInsA_B + countInsC_D)/ (lenOne + lenTwo) * 100) + "%") +"</span>");
+            systemHealth = systemHealth - (((lenOne + lenTwo) - (countInsA_B + countInsC_D)) * 0.5);
+            // 将最终的系统健康度传给页面
+            $(".system-health").text(systemHealth + "分");
+        }
+    }
+
+    // 查询采集数据详情
+    function que(switchData) {
+        var url = fiveGApi + "/collectionData/selAllCollectionDataBySysIdType";
+        var obj = {
+            sysId : localStorage.getItem("sysId"),
+            switch_view_history : switchData
+        };
+        var cols = [[
+            {field: 'SYS_ID', title: '所属组网', align: 'center', width: '15%'},
+            {field: 'COLLECT_POSITION', title: '采集位置', align: 'center', width: '8%', sortable : 'true'},
+            {field: 'WAVE_LENGTH', title: '波长', align: 'center', width: '7%',sortable : 'true'},
+            {field: 'COLLECT_VALUE', title: '采集对应波长', align: 'center', width: '10%'},
+            {field: 'LON', title: '上传段经度', align: 'center', width: '10%'},
+            {field: 'LAT', title: '上传段纬度', align: 'center', width: '10%'},
+            {field: 'CREATE_OP', title: '采集人', align: 'center', width: '10%'},
+            {field: 'CREATE_DATE', title: '采集时间', align: 'center', width: '15%'},
+            {field: 'REMARK', title: '描述', align: 'center', width: '15%'}
+        ]];
+        if(!switchData){
+            mDatagrid("#dg", url, obj, cols, 50, [50]);
+        }else {
+            mDatagrid("#dg", url, obj, cols);
+        }
+    }
+
+    $(document).ready(function(){
+        var canvas =$('#canvas')[0];//初始化canvas对象
+        var stage=new JTopo.Stage(canvas);//创建一个舞台对象
+        var scene=new JTopo.Scene(stage);//创建一个场景对象
+        stage.mode = "select"; // 可以框选多个节点、可以点击单个节点,不能拖动
+        //显示工具栏
+        // showJTopoToobar(stage);
+        // scene.setBackground("images/img/bj.jpg");
+        var list=[{node:"cuNode",name:"cu",x:60,y:70,width:120,height:420,img:"/ssoClient/images/img/cu.png"},
+            {node:"hbqNode",name:"合波器",x:360,y:70,width:50,height:420,img:"/ssoClient/images/img/hbq1.png",typeId:"B"},
+            {node:"qxNode",title:"纤芯",name:"纤芯",x:410,y:270,width:200,height:10,img:"/ssoClient/images/img/qx.png"},
+            {node:"fbqNode",name:"分波器",x:610,y:70,width:50,height:420,img:"/ssoClient/images/img/fbq1.png",typeId:"C"},
+            {node:"Node_1270",name:"1270",x:160,y:120,width:80,height:30,img:"/ssoClient/images/img/1270_2.png",typeId:"A"},
+            {node:"Node_1310",name:"1310",x:160,y:170,width:80,height:30,img:"/ssoClient/images/img/1310_2.png",typeId:"A"},
+            {node:"Node_1350",name:"1350",x:160,y:220,width:80,height:30,img:"/ssoClient/images/img/1350_2.png",typeId:"A"},
+            {node:"Node_1470",name:"1470",x:160,y:290,width:80,height:30,img:"/ssoClient/images/img/1470_2.png",typeId:"A"},
+            {node:"Node_1510",name:"1510",x:160,y:340,width:80,height:30,img:"/ssoClient/images/img/1510_2.png",typeId:"A"},
+            {node:"Node_1550",name:"1550",x:160,y:390,width:80,height:30,img:"/ssoClient/images/img/1550_2.png",typeId:"A"},
+            {node:"AAU_1290",name:"AAU",x:840,y:110,width:90,height:50,img:"/ssoClient/images/img/aau.png"},
+            {node:"AAU_1330",name:"AAU",x:840,y:160,width:90,height:50,img:"/ssoClient/images/img/aau.png"},
+            {node:"AAU_1370",name:"AAU",x:840,y:210,width:90,height:50,img:"/ssoClient/images/img/aau.png"},
+            {node:"AAU_1490",name:"AAU",x:840,y:280,width:90,height:50,img:"/ssoClient/images/img/aau.png"},
+            {node:"AAU_1530",name:"AAU",x:840,y:330,width:90,height:50,img:"/ssoClient/images/img/aau.png"},
+            {node:"AAU_1570",name:"AAU",x:840,y:380,width:90,height:50,img:"/ssoClient/images/img/aau.png"},
+            {node:"Node_1290",name:"1290",x:780,y:120,width:80,height:30,img:"/ssoClient/images/img/1290_2.png",typeId:"D"},
+            {node:"Node_1330",name:"1330",x:780,y:170,width:80,height:30,img:"/ssoClient/images/img/1330_2.png",typeId:"D"},
+            {node:"Node_1370",name:"1370",x:780,y:220,width:80,height:30,img:"/ssoClient/images/img/1370_2.png",typeId:"D"},
+            {node:"Node_1490",name:"1490",x:780,y:290,width:80,height:30,img:"/ssoClient/images/img/1490_2.png",typeId:"D"},
+            {node:"Node_1530",name:"1530",x:780,y:340,width:80,height:30,img:"/ssoClient/images/img/1530_2.png",typeId:"D"},
+            {node:"Node_1570",name:"1570",x:780,y:390,width:80,height:30,img:"/ssoClient/images/img/1570_2.png",typeId:"D"}];
+        var nodeList=[];
+        for(var i=0;i<list.length;i++){
+            var node =createNode(list[i]);
+            var obj={name:list[i].node,node:node};
+            nodeList.push(obj);
+            scene.add(node);//将节点插入场景
+        }
+        var linkList=[
+            {node1:"Node_1270",node2:"hbqNode",name:"1270nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+            {node1:"Node_1310",node2:"hbqNode",name:"1310nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+            {node1:"Node_1350",node2:"hbqNode",name:"1350nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+            {node1:"Node_1470",node2:"hbqNode",name:"1470nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+            {node1:"Node_1510",node2:"hbqNode",name:"1510nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+            {node1:"Node_1550",node2:"hbqNode",name:"1550nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+
+            {node2:"Node_1270",node1:"hbqNode",name:"1290nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:30,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+            {node2:"Node_1310",node1:"hbqNode",name:"1330nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:30,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+            {node2:"Node_1350",node1:"hbqNode",name:"1370nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:30,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+            {node2:"Node_1470",node1:"hbqNode",name:"1490nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:30,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+            {node2:"Node_1510",node1:"hbqNode",name:"1530nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:30,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+            {node2:"Node_1550",node1:"hbqNode",name:"1570nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:30,textOffsetY:3,strokeColor:"223,228,234",typeId:"A"},
+
+            {node1:"fbqNode",node2:"Node_1290",name:"1270nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+            {node1:"fbqNode",node2:"Node_1330",name:"1310nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+            {node1:"fbqNode",node2:"Node_1370",name:"1350nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+            {node1:"fbqNode",node2:"Node_1490",name:"1470nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+            {node1:"fbqNode",node2:"Node_1530",name:"1510nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+            {node1:"fbqNode",node2:"Node_1570",name:"1550nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+
+            {node2:"fbqNode",node1:"Node_1290",name:"1290nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+            {node2:"fbqNode",node1:"Node_1330",name:"1330nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+            {node2:"fbqNode",node1:"Node_1370",name:"1370nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+            {node2:"fbqNode",node1:"Node_1490",name:"1490nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+            {node2:"fbqNode",node1:"Node_1530",name:"1530nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"},
+            {node2:"fbqNode",node1:"Node_1570",name:"1570nm",arrowsRadius:10,lineWidth:5,dashedPattern:5,bundleOffset:60,bundleGap:20,textOffsetY:3,strokeColor:"223,228,234",typeId:"D"}
+        ];
+
+        for(var i=0;i<linkList.length;i++){
+            for(var j=0;j<nodeList.length;j++){
+                if(nodeList[j].name==linkList[i].node1){
+                    linkList[i].node1=nodeList[j].node;//将节点名称替换为节点对象
+                }
+                if(nodeList[j].name==linkList[i].node2){
+                    linkList[i].node2=nodeList[j].node;//将节点名称替换为节点对象
+                }
+            }
+            var link=createLink(linkList[i]);
+            scene.add(link);
+        }
+        // 将舞台对象赋给全局舞台对象
+        bigStage = stage;
+        // 根据组网id查询组网名
+        selNameById();
+
+        // 查询各种合格率
+        selPassRate();
+        // 查询A、D端数据
+        createGldList1();
+
+        // 查询采集数据
+        que();
+
+        // if(dataJson[0].length != 0 && dataJson[1].length != 0 && dataJson[2].length != 0 && dataJson[3].length != 0) {
+        //     showDecayPointData();
+        // }
+
+        // 获取所有的节点
+        var findNode = stage.find('node');
+        // 循环给各个节点添加双击事件
+        for(var i = 0; i<findNode.length; i++){
+            findNode[i].dbclick(function(){
+                // A端
+                if (this.typeId == 'A') {
+                    // 判断A端存入波长与采集数据的数组是否有数据
+                    if(lengthValueA_B.length != 0){
+                        // 循坏A端存入波长与采集数据的数组
+                        for (var j = 0; j < lengthValueA_B[0].length; j++) {
+                            // 只有此时的连接线与A端数组相匹配时才执行
+                            if (this.name == lengthValueA_B[0][j].WAVE_LENGTH) {
+                                // 查看组网各节点的详情
+                                viewDetails(this);
+                                // 一旦匹配就跳出循环
+                                break;
+                            }
+                        }
+                    }
+                }
+                // D端
+                if (this.typeId == 'D') {
+                    // 判断D端存入波长与采集数据的数组是否有数据
+                    if(lengthValueC_D.length != 0) {
+                        // 循坏D端存入波长与采集数据的数组
+                        for (var j = 0; j < lengthValueC_D[1].length; j++) {
+                            // 只有此时的连接线与A端数组相匹配时才执行
+                            if (this.name == lengthValueC_D[1][j].WAVE_LENGTH) {
+                                // 查看组网各节点的详情
+                                viewDetails(this);
+                                // 一旦匹配就跳出循环
+                                break;
+                            }
+                        }
+                    }
+                }
+                // B、C端
+                if (this.typeId == 'B') {
+                    if(dataJson[1].length != 0){
+                        // 查看组网各节点的详情
+                        viewDetails(this);
+                    }
+                }
+                if (this.typeId == 'C') {
+                    if(dataJson[2].length != 0){
+                        // 查看组网各节点的详情
+                        viewDetails(this);
+                    }
+                }
+            });
+        }
+
+        // 获取提示框的对象
+        var tips = $("#tips");
+        // 获取所有节点之间连接的线
+        var findLink = stage.find('link');
+        // 循环给各个节点添加事件
+        for(var i = 0; i<findLink.length; i++){
+            // 双击事件
+            findLink[i].dbclick(function(){
+                // A端
+                if (this.typeId == 'A' || this.typeId == 'D') {
+                    // 只有线条颜色符合才添加
+                    if (this.strokeColor == "255,77,77" || this.strokeColor == "24,220,255") {
+                        // 查看组网各节点的详情
+                        viewDetails(this);
+                    }
+                }
+            });
+
+            // 鼠标移入事件
+            findLink[i].mouseover(function () {
+                // A端
+                if (this.typeId == 'A') {
+                    // 只有线条颜色符合才添加
+                    if(this.strokeColor == "255,77,77" || this.strokeColor == "24,220,255") {
+                        // 判断A端存入波长与采集数据的数组是否有数据
+                        if(lengthValueA_B.length != 0){
+                            // 循坏A端存入波长与采集数据的数组
+                            for (var j = 0; j < lengthValueA_B[0].length; j++) {
+                                // 只有此时的连接线与A端数组想匹配时才执行
+                                if (this.name.substring(0, 4) == lengthValueA_B[0][j].WAVE_LENGTH) {
+                                    // 为提示框附上此时连接线与A端相匹配的波长、数据与损耗
+                                    tips.html("波长:" + lengthValueA_B[0][j].WAVE_LENGTH + "nm" + "&nbsp;&nbsp;&nbsp;数据:" + lengthValueA_B[0][j].COLLECT_VALUE + "dB" + "&nbsp;&nbsp;&nbsp;损耗:" + getThree(Math.abs(lengthValueA_B[0][j].COLLECT_VALUE - lengthValueA_B[1][j].COLLECT_VALUE)) + "dB")
+                                    // 显示提示框
+                                    tips.css({"display": "block"});
+                                    // 一旦匹配就跳出循环
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // D端
+                if (this.typeId == 'D') {
+                    // 只有线条颜色符合才添加
+                    if(this.strokeColor == "255,77,77" || this.strokeColor == "24,220,255") {
+                        // 循坏D端存入波长与采集数据的数组是否有数据
+                        if(lengthValueC_D.length != 0) {
+                            // 循坏D端存入波长与采集数据的数组
+                            for (var j = 0; j < lengthValueC_D[1].length; j++) {
+                                // 只有此时的连接线与D端数组想匹配时才执行
+                                if (this.name.substring(0, 4) == lengthValueC_D[1][j].WAVE_LENGTH) {
+                                    // 为提示框附上此时连接线与D端相匹配的波长、数据与损耗
+                                    tips.html("波长:" + lengthValueC_D[1][j].WAVE_LENGTH + "nm" + "&nbsp;&nbsp;&nbsp;数据:" + lengthValueC_D[1][j].COLLECT_VALUE + "dB" + "&nbsp;&nbsp;&nbsp;损耗:" + getThree(Math.abs(lengthValueC_D[0][j].COLLECT_VALUE - lengthValueC_D[1][j].COLLECT_VALUE)) + "dB")
+                                    // 显示提示框
+                                    tips.css({"display": "block"});
+                                    // 一旦匹配就跳出循环
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 鼠标移出事件
+            findLink[i].mouseout(function () {
+                // 鼠标移开就隐提示框
+                tips.css({"display": "none"});
+            });
+        }
+    });
+
+    /**
+     * 创建node
+     * {node:对象名称,title:节点标题,x:节点x坐标,y:节点y坐标,width:节点宽度,height:节点高度,img:节点图片}
+     * @param {Object} map
+     */
+    function createNode(map){
+        var node =new JTopo.Node(map.title);//创建一个节点
+        node.setBound(map.x,map.y,map.width,map.height);//设置位置 x,y,width,height
+        node.setImage(map.img);
+        node.dragable="true";//设置节点不可以移动
+        node.typeId = map.typeId;// 设置节点的类型（方便区分）
+        node.name = map.name;// 设置节点的名称
+        return node;
+    }
+    /**
+     * 两个节点之间创建连线
+     * {node1:起始节点,node2:结束节点,title:线条标题,arrowsRadius:箭头大小,lineWidth:线宽,
+     * bundleGap:线条之间间隔,textOffsetY:标题偏移量,strokeColor:颜色支持（'0,200,255'）}
+     * @param {Object} map
+     */
+    function createLink(map){
+        var link = new JTopo.FlexionalLink(map.node1, map.node2, map.title);
+        link.direction = 'horizontal';
+        link.arrowsRadius =map.arrowsRadius; //箭头大小
+        link.lineWidth = map.lineWidth; // 线宽
+        link.bundleGap = map.bundleGap; // 线条之间的间隔
+        link.textOffsetY = map.textOffsetY; // 文本偏移量（向下3个像素）
+        link.strokeColor =map.strokeColor;//颜色  支持 #eeeeee map.strokeColor
+        link.typeId = map.typeId;// 设置线的类型（方便区分）
+        link.name = map.name;// 设置线的名称
+        return link;
+    }
+
+    // 查看组网各节点的详情
+    function viewDetails(param) {
+        // 判断节点是否属于A或D端
+        if(param.typeId == 'A' || param.typeId == 'D'){
+            layer.open({
+                type: 2,
+                area:[(winWidth * 0.8 + 'px'), '200px'],
+                maxmin: true,
+                // skin:'layui-layer-molv',
+                title: ['组网采集数据详情'],
+                // 关闭遮罩层
+                shade: 0,
+                content: '/collectionData/selCollectionSysView?sysId=' + sysId+ '&type=' + param.typeId+ '&waveLength=' + param.name
+            });
+        }else if(param.typeId == 'B' || param.typeId == 'C'){// 判断节点是否属于B或C端
+            layer.open({
+                type: 2,
+                area:[(winWidth * 0.8 + 'px'), newHeight],
+                maxmin: true,
+                // skin:'layui-layer-molv',
+                title: ['组网采集数据详情'],
+                // 关闭遮罩层
+                shade: 0,
+                content: '/collectionData/selCollectionSysView?sysId=' + sysId+ '&type=' + param.typeId+ '&waveLength=' + param.name + '&specification=' + specification
+            });
+        }else {
+            layer.msg('该节点暂无信息!');
+        }
+    }
+
+    // A、Z端信息
+    function createGldList1(){
+        var aimg="<p>成端照片</p>",zimg="<p>成端照片</p>";
+
+        var spana = "<span>暂无</span>";
+        var spanz = "<span style='color:#838A9D;'>暂无</span>";
+        aimg='<img src="/ssoClient/images/kl.jpg" id="AImg" myname="AImg" onclick="getBigImg(this)" onerror="noImg(this)">';
+        spana = "";
+        var html=
+            "<div class='gldListA'>"
+                + "<div class='gldListLeft'>"
+                    + "<div class='gldListLeftTop'>"
+                        + "<input type='radio' name='AZ' id='az1' value='0'/>"
+                    + "</div>"
+                    + "<div class='gldListLeftBottom'>"
+                        + "<p>A端机房名称：</p>"
+                        + "<a href='javascript:;'>asdadas</a>"
+                    + "</div>"
+                + "</div>"
+                + "<div class='gldListRight'>"
+                    + aimg
+                    + spana
+                + "</div>"
+            +"</div>"
+            +"<div class='gldListZ'>"
+                + "<div class='gldListLeft' style='display:flex;'>"
+                    + "<div class='gldListLeftTop'>"
+                        + "<input type='radio' name='AZ' id='az2' value='0'/>"
+                    + "</div>"
+                    + "<div class='gldListLeftBottom'>"
+                        + "<p>Z端机房名称：</p>"
+                        + "<a href='javascript:;'>asdadas</a>"
+                    + "</div>"
+                + "</div>"
+                + "<div class='gldListRight'>"
+                    + zimg
+                    + spanz
+                + "</div>"
+            +"</div>"
+
+        $("#gldList").append(html);
+    }
+
+    // 图片不存在函数
+    function noImg(a) {
+        // 取消点击图片的放大功能；
+        a.onclick = "";
+        a.style.cursor = "default";
+    }
+
+    function getBigImg(obj){
+        $("#bigImgParent img").remove();
+        $("#bigImgParent").append(img);
+
+        $("#bigImg").attr("src",obj.src);
+        $("#bigImg").attr("data-large",obj.src);
+        $("#bigImg").attr("myname",obj.id);
+        // 加载放大图片功能
+        $(".my-foto").imagezoomsl({
+            zoomrange: [1, 12],
+            magnifiereffectanimate: 'fadeIn',
+            magnifierborder: 'none'
+        });
+        $("#bigImgParent").css({"display":"block"});
+    }
+
+    // 关闭图片
+    function closeImg(){
+        $("#bigImgParent").css({"display":"none"});
+    }
+
+    // 放大图片的图片随着窗口的变化从而变大或缩小
+    function changePicture(w,h) {
+        let AImg;
+        let ZImg;
+        if(document.getElementById("AImg")){
+            // A端图片
+            AImg = document.getElementById("AImg");
+        }
+        if(document.getElementById("ZImg")){
+            // Z端图片
+            ZImg = document.getElementById("ZImg");
+        }
+        if($("#bigImgParent").css("display") == "block"){
+            const bigImg = document.getElementById("bigImg");
+            // 先关闭图片
+            closeImg();
+            // 再设置图片容器的大小
+            $("#bigImgParent").css({"width":w,"height":h});
+            // 判断打开的图片是A端还是Z端
+            if(bigImg.getAttribute("myname") == "AImg"){
+                // 在重新打开图片并传入对应的图片
+                getBigImg(AImg);
+            }else if(a.getAttribute("myname") == "ZImg") {
+                getBigImg(ZImg);
+            }
+        }else {
+            $("#bigImgParent").css({"width":w,"height":h});
+        }
+    }
+
+    // 图形数据展示
+    function showDecayPointData () {
+        // 获取父容器的宽高
+        var w = $(".big-decayPoint").eq(0).width();
+        var h = $(".big-decayPoint").eq(0).height();
+        // 将宽高赋给echarts图形容器
+        $("#decayPoint").css({"width":(w * 0.9 + 'px'),"height": (h + 'px')});
+        // 获取图形容器
+        var echarts = layui.echarts;
+        var myChart = echarts.init(document.getElementById('decayPoint'));
+
+        // 绘制柱状图
+        // 存放柱状图的总数据
+        var salvProValue = [];
+        // 第二个Y轴数据
+        var secondY = [];
+        // X坐标的最大值
+        var salvProMax = totalAttenuationA_D_Variable[0].DECAY// 默认最大值为该数组的第一位
+        var salvProMaxBol = true;
+        // 存放柱状图底层柱状图的数据
+        var salvProMaxList = [];
+        // 循环获取最大值
+        for (let i = 0; i < totalAttenuationA_D_Variable.length; i++) {
+            if(salvProMaxBol) {
+                // 当前的衰耗值是否为未测试
+                if(totalAttenuationA_D_Variable[i].DECAY != "未测试") {
+                    // 不为未测试就将值赋给最大值变量（初始值）
+                    salvProMax = totalAttenuationA_D_Variable[i].DECAY;
+                    // 并将判断值改为false，不再进入
+                    salvProMaxBol = false;
+                }else {
+                    // 为未测试则结束本次循环进入下次循环
+                    continue;
+                }
+            }
+            if(!salvProMaxBol) {
+                // i不等于该数组的最后一位
+                if(i != totalAttenuationA_D_Variable.length - 1) {
+                    if(totalAttenuationA_D_Variable[i + 1].DECAY != "未测试") {
+                        // 获取最大值
+                        if(salvProMax < totalAttenuationA_D_Variable[i+1].DECAY) {
+                            salvProMax = totalAttenuationA_D_Variable[i+1].DECAY;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (let i = 0; i < totalAttenuationA_D_Variable.length; i++) {
+            var totalAttenuationOne = [];
+            totalAttenuationOne[0] = salvProMax;  // X轴最大值
+            totalAttenuationOne[1] = totalAttenuationA_D_Variable[i].WAVE_LENGTH; // 对应的Y轴波长
+            totalAttenuationOne[2] = totalAttenuationA_D_Variable[i].DECAY; // 全程衰耗值
+            // 为了判断这4个点是否都为空，都为空就为空闲
+            totalAttenuationOne[3] = totalAttenuationA_D_Variable[i].COLLECT_VALUEA; // A端数据
+            totalAttenuationOne[4] = insertionLossA_B_Variable[i].COLLECT_VALUEB; // B端数据
+            totalAttenuationOne[5] = insertionLossC_D_Variable[i].COLLECT_VALUEC; // C端数据
+            totalAttenuationOne[6] = totalAttenuationA_D_Variable[i].COLLECT_VALUED; // D端数据
+            salvProValue.push(totalAttenuationOne);
+
+            // 第二个Y轴的数据
+            secondY[i] = totalAttenuationA_D_Variable[i].DECAY;
+        }
+
+        // 箭头数据
+        var arrow = [];
+        // 循环制作柱状图的底层以及箭头
+        for(let i = 0,length = totalAttenuationA_D_Variable.length; i < length; i++) {
+            var salvProMaxValue = [];
+            salvProMaxValue[0] = salvProMax;
+            salvProMaxValue[1] = totalAttenuationA_D_Variable[i].WAVE_LENGTH;
+            salvProMaxList.push(salvProMaxValue);
+
+            var arrowone = [];
+            var occlusionone = [];
+            if(((i + 1) % 2) == 0) {// 位置为双数箭头在左边
+                arrowone = {
+                    coord: [0, totalAttenuationA_D_Variable[i].WAVE_LENGTH], // 箭头位置
+                    symbolRotate: 90, // 逆时针旋转90度
+                    symbolOffset: [-10, 0] // 箭头偏移
+                };
+                // ABCD端只要有一个有数据就执行
+                if(totalAttenuationA_D_Variable[i].COLLECT_VALUEA == "" && insertionLossA_B_Variable[i].COLLECT_VALUEB == ""
+                    && insertionLossC_D_Variable[i].COLLECT_VALUEC == "" && totalAttenuationA_D_Variable[i].COLLECT_VALUED == ""){
+                    // ABCD端都没数据就为空闲
+                    arrowone.itemStyle = {
+                        color: root_computed.getPropertyValue('--free-color-dark').trim()
+                    };
+                } else {
+                    if(totalAttenuationA_D_Variable[i].DECAY <= 6) {
+                        arrowone.itemStyle = {
+                            color: root_computed.getPropertyValue('--high-quality-color-dark').trim()
+                        };
+                    }else if(totalAttenuationA_D_Variable[i].DECAY <= 10) {
+                        arrowone.itemStyle = {
+                            color: root_computed.getPropertyValue('--qualified-color-dark').trim()
+                        };
+                    }else if(totalAttenuationA_D_Variable[i].DECAY <= 14) {
+                        arrowone.itemStyle = {
+                            color: root_computed.getPropertyValue('--available-color-dark').trim()
+                        };
+                    }else if(totalAttenuationA_D_Variable[i].DECAY > 14) {
+                        arrowone.itemStyle = {
+                            color: root_computed.getPropertyValue('--not-available-color-dark').trim()
+                        };
+                    }else {
+                        arrowone.itemStyle = {
+                            color: root_computed.getPropertyValue('--not-tested-color-dark').trim()
+                        }
+                    }
+                }
+            }else {
+                arrowone = {// 位置为单数箭头在最右边
+                    coord: [salvProMax, totalAttenuationA_D_Variable[i].WAVE_LENGTH],
+                    symbolRotate: -90, // 顺时针旋转
+                    symbolOffset: [10, 0]
+                };
+                // ABCD端只要有一个有数据就执行
+                if(totalAttenuationA_D_Variable[i].COLLECT_VALUEA == "" && insertionLossA_B_Variable[i].COLLECT_VALUEB == ""
+                    && insertionLossC_D_Variable[i].COLLECT_VALUEC == "" && totalAttenuationA_D_Variable[i].COLLECT_VALUED == ""){
+                    // ABCD端都没数据就为空闲
+                    arrowone.itemStyle = {
+                        color: root_computed.getPropertyValue('--free-color').trim()
+                    };
+                } else {
+                    if(totalAttenuationA_D_Variable[i].DECAY <= 6) {
+                        arrowone.itemStyle = {
+                            color: root_computed.getPropertyValue('--high-quality-color').trim()
+                        };
+                    }else if(totalAttenuationA_D_Variable[i].DECAY <= 10) {
+                        arrowone.itemStyle = {
+                            color: root_computed.getPropertyValue('--qualified-color').trim()
+                        };
+                    }else if(totalAttenuationA_D_Variable[i].DECAY <= 14) {
+                        arrowone.itemStyle = {
+                            color: root_computed.getPropertyValue('--available-color').trim()
+                        };
+                    }else if(totalAttenuationA_D_Variable[i].DECAY > 14) {
+                        arrowone.itemStyle = {
+                            color: root_computed.getPropertyValue('--not-available-color').trim()
+                        };
+                    }else {
+                        arrowone.itemStyle = {
+                            color: root_computed.getPropertyValue('--not-tested-color').trim()
+                        }
+                    }
+                }
+            }
+
+            arrow.push(arrowone);
+        }
+
+        // 绘制衰耗点
+        // 衰耗点总数据
+        var decayPointListA_B = [];
+        var decayPointListC_D = [];
+
+        // 循环A-B端的插入损耗数据
+        for(let i = 0; i<insertionLossA_B_Variable.length; i++) {
+            var decayPointLabel = { // 文本标签
+                show: true,
+                position: 'top', // 位置节点上方
+                fontSize: 12,
+                formatter:function(params){ //标签内容
+                    var s = '';
+                    if('name' in params) {
+                        if (params.name != null) {
+                            s = params.name;
+                        }
+                    }
+                    return s;
+                }
+            }
+
+            var decayPointA_B = {};
+            // 名称：该点的插入损耗(A-B)
+            decayPointA_B.name = insertionLossA_B_Variable[i].LOSS;
+            // 【
+            //      虚假的数据为了定位（X轴最大数值的1/3位置）
+            //      Y轴数值，波长
+            //      是否合格(0合格  1不合格  2未测试)
+            //      A端采集数据
+            //      B端采集数据
+            //      标识是A端
+            // 】
+            decayPointA_B.value = [salvProMax / 3, insertionLossA_B_Variable[i].WAVE_LENGTH, insertionLossA_B_Variable[i].IDENTIFICATION,
+                insertionLossA_B_Variable[i].COLLECT_VALUEA, insertionLossA_B_Variable[i].COLLECT_VALUEB, "A"];
+            // 该衰耗点的样式
+            decayPointA_B.itemStyle = {
+                borderColor: "#fff",
+                borderWidth: 2,
+                shadowBlur: 10
+            };
+            if(insertionLossA_B_Variable[i].COLLECT_VALUEA == "" || insertionLossA_B_Variable[i].COLLECT_VALUEB == "") {
+                decayPointA_B.itemStyle.color = new echarts.graphic.LinearGradient(0, 0, 1, 0, [{  // 衰耗点颜色
+                    offset: 0,
+                    color: root_computed.getPropertyValue('--not-tested-color-dark').trim()
+                }, {
+                    offset: 1,
+                    color: root_computed.getPropertyValue('--not-tested-color').trim()
+                }]);
+                decayPointA_B.itemStyle.shadowColor = root_computed.getPropertyValue('--not-tested-color').trim(); // 衰耗点的阴影颜色
+                decayPointA_B.label =  decayPointLabel;
+                decayPointA_B.label.color = root_computed.getPropertyValue('--not-tested-color').trim();
+            }else {
+                if(decayPointA_B.value[2] == 0) {
+                    decayPointA_B.itemStyle.color = new echarts.graphic.LinearGradient(0, 0, 1, 0, [{  // 衰耗点颜色
+                        offset: 0,
+                        color: root_computed.getPropertyValue('--high-quality-color-dark').trim()
+                    }, {
+                        offset: 1,
+                        color: root_computed.getPropertyValue('--high-quality-color').trim()
+                    }]);
+                    decayPointA_B.itemStyle.shadowColor = root_computed.getPropertyValue('--high-quality-color').trim(); // 衰耗点的阴影颜色
+                    decayPointA_B.label =  decayPointLabel;
+                    decayPointA_B.label.color = root_computed.getPropertyValue('--high-quality-color').trim();
+                }else {
+                    decayPointA_B.itemStyle.color = new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                        offset: 0,
+                        color: root_computed.getPropertyValue('--not-available-color-dark').trim()
+                    }, {
+                        offset: 1,
+                        color: root_computed.getPropertyValue('--not-available-color').trim()
+                    }]);
+                    decayPointA_B.itemStyle.shadowColor = root_computed.getPropertyValue('--not-available-color').trim();
+                    decayPointA_B.label =  decayPointLabel;
+                    decayPointA_B.label.color = root_computed.getPropertyValue('--not-available-color').trim();
+                }
+            }
+
+            decayPointListA_B.push(decayPointA_B);
+        }
+
+        // 循环C-D端的插入损耗数据
+        for(let i = 0; i<insertionLossC_D_Variable.length; i++) {
+            var decayPointLabel = { // 文本标签
+                show: true,
+                position: 'top', // 位置节点上方
+                fontSize: 12,
+                formatter:function(params){ //标签内容
+                    var s = '';
+                    if('name' in params) {
+                        if (params.name != null) {
+                            s = params.name;
+                        }
+                    }
+                    return s;
+                }
+            }
+
+            var decayPointC_D = {};
+            // 名称： 该点的插入损耗（C-D）
+            decayPointC_D.name = insertionLossC_D_Variable[i].LOSS;
+            // 【
+            //      虚假的数据为了定位（X轴最大数值的2/3位置）
+            //      Y轴数值，波长
+            //      是否合格(0合格  1不合格  2未测试)
+            //      C端采集数据
+            //      D端采集数据
+            //      标识是D端
+            // 】
+            decayPointC_D.value = [salvProMax / 3 * 2, insertionLossC_D_Variable[i].WAVE_LENGTH, insertionLossC_D_Variable[i].IDENTIFICATION,
+                insertionLossC_D_Variable[i].COLLECT_VALUEC, insertionLossC_D_Variable[i].COLLECT_VALUED, "D"];
+            // 衰耗点的样式
+            decayPointC_D.itemStyle = {
+                borderColor: "#fff",
+                borderWidth: 2,
+                shadowBlur: 10
+            };
+
+            if(insertionLossC_D_Variable[i].COLLECT_VALUEC == "" || insertionLossC_D_Variable[i].COLLECT_VALUED == "") {
+                decayPointC_D.itemStyle.color = new echarts.graphic.LinearGradient(0, 0, 1, 0, [{  // 衰耗点颜色
+                    offset: 0,
+                    color: root_computed.getPropertyValue('--not-tested-color-dark').trim()
+                }, {
+                    offset: 1,
+                    color: root_computed.getPropertyValue('--not-tested-color').trim()
+                }]);
+                decayPointC_D.itemStyle.shadowColor = root_computed.getPropertyValue('--not-tested-color').trim(); // 衰耗点的阴影颜色
+                decayPointC_D.label =  decayPointLabel;
+                decayPointC_D.label.color = root_computed.getPropertyValue('--not-tested-color').trim();
+            } else {
+                if(decayPointC_D.value[2] == 0) {
+                    decayPointC_D.itemStyle.color = new echarts.graphic.LinearGradient(0, 0, 1, 0, [{ // 衰耗点颜色
+                        offset: 0,
+                        color: root_computed.getPropertyValue('--high-quality-color-dark').trim()
+                    }, {
+                        offset: 1,
+                        color: root_computed.getPropertyValue('--high-quality-color').trim()
+                    }]);
+                    decayPointC_D.itemStyle.shadowColor = root_computed.getPropertyValue('--high-quality-color').trim(); // 阴影色
+                    decayPointC_D.label = decayPointLabel;
+                    decayPointC_D.label.color = root_computed.getPropertyValue('--high-quality-color').trim();
+                }else {
+                    decayPointC_D.itemStyle.color = new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                        offset: 0,
+                        color: root_computed.getPropertyValue('--not-available-color-dark').trim()
+                    }, {
+                        offset: 1,
+                        color: root_computed.getPropertyValue('--not-available-color').trim()
+                    }]);
+                    decayPointC_D.itemStyle.shadowColor = root_computed.getPropertyValue('--not-available-color').trim();
+                    decayPointC_D.label = decayPointLabel;
+                    decayPointC_D.label.color = root_computed.getPropertyValue('--not-available-color').trim();
+                }
+            }
+
+            decayPointListC_D.push(decayPointC_D);
+        }
+
+        // rgb(255, 175, 64) rgb(255, 221, 89)
+
+        // 定义X轴的各个标题
+        var XTitle = [];
+        // 先获取全程衰耗数组中最后一条数据，为了获取最后一个波长，方便定位在最下面
+        var lastLength = totalAttenuationA_D_Variable[totalAttenuationA_D_Variable.length - 1];
+        var du = {};
+        var demultiplexerA_B = {};
+        var demultiplexerC_D = {};
+        var aau = {};
+
+        // X轴标题中的label模板
+        var Xlabel = {
+            show: true,
+            position: 'bottom', // 定位在节点的下方
+            textStyle: {
+                color: '#fff',
+            },
+            fontFamily: "sans-serif",
+            fontSize: 14,
+            formatter:function(params){ // 标签内容
+                var s = '';
+                if('data' in params) {
+                    if (params.data.name != null && params.data.name != undefined) {
+                        s = params.data.name;
+                    }
+                }
+                return s;
+            }
+        }
+        du.name = 'DU';
+        du.value = [0,lastLength.WAVE_LENGTH];
+        du.label = Xlabel;
+        // 创建分和波器
+        // 先获取位置，A-B为图形的1/3位置，C-D为2/3位置
+        // 使用最大值/3可获取A-B位置
+        demultiplexerA_B.name = '合分波设备';
+        demultiplexerA_B.value = [salvProMax / 3,lastLength.WAVE_LENGTH];
+        demultiplexerA_B.label = Xlabel;
+        demultiplexerC_D.name = '合分波设备';
+        demultiplexerC_D.value = [salvProMax / 3 * 2,lastLength.WAVE_LENGTH];
+        demultiplexerC_D.label = Xlabel;
+        aau.name = 'AAU';
+        aau.value = [salvProMax,lastLength.WAVE_LENGTH];
+        aau.label = Xlabel;
+        // 偏移的距离
+        if(totalAttenuationA_D_Variable.length == 6) {
+            Xlabel.offset = [0,50];
+        }else {
+            Xlabel.offset = [0,35];
+        }
+        XTitle.push(du);
+        XTitle.push(demultiplexerA_B);
+        XTitle.push(demultiplexerC_D);
+        XTitle.push(aau);
+
+        // 定义第二个X轴（上方）
+        var XTitleTop = [];
+        // 上方X轴的label模板
+        var XlabelTop = {
+            show: true,
+            position: 'top', // 定位在节点的上方
+            textStyle: {
+                color: '#ffffff',
+            },
+            fontFamily: "sans-serif",
+            fontSize: 14,
+            formatter:function(params){ // 标签内容
+                var s = '';
+                if('data' in params) {
+                    if (params.data.name != null && params.data.name != undefined) {
+                        s = params.data.name;
+                    }
+                }
+                return s;
+            },
+            offset: [0,-30]
+        }
+        // 先获取全程衰耗数组中第一条数据，为了获取第一个波长，方便定位在最上面
+        var firstLength = totalAttenuationA_D_Variable[0];
+        var XInsertionLossA_B = {};
+        XInsertionLossA_B.name = "A-B插损";
+        XInsertionLossA_B.value = [salvProMax / 3, firstLength.WAVE_LENGTH];
+        XInsertionLossA_B.label = XlabelTop;
+        var XInsertionLossC_D = {};
+        XInsertionLossC_D.name = "C-D插损";
+        XInsertionLossC_D.value = [salvProMax / 3 * 2, firstLength.WAVE_LENGTH];
+        XInsertionLossC_D.label = XlabelTop;
+        XTitleTop.push(XInsertionLossA_B);
+        XTitleTop.push(XInsertionLossC_D);
+
+        var option = {
+            backgroundColor:"#003366",
+            grid: {
+                left: '2%',
+                right: '2%',
+                bottom: '8%',
+                top: '6%',
+                containLabel: true
+            },
+            xAxis: {
+                show: true,
+                axisLine: {
+                    show: true,
+                    symbol: "arrow",
+                    symbolOffset: [-10, 10],
+                    lineStyle: {
+                        color: 'rgb(74,184,243)',
+                        width: 2
+                    }
+                },
+                splitLine: {
+                    show: false
+                },
+                axisTick: {
+                    show: false
+                },
+                axisLabel: {
+                    show: false
+                },
+                type: 'value'
+            },
+            yAxis: [{
+                type: 'category', // 按传过来的值来定制Y轴
+                position: 'left',
+                name: '(nm)',
+                nameLocation: 'start',
+                nameTextStyle: {
+                    color: '#fff',
+                    fontSize: 20
+                },
+                nameGap: -10, // 标题Y轴偏移
+                inverse: true, // 是否是反向坐标轴
+                offset: 10, // 偏移10
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        color: '#fff',
+                        fontSize: 14
+                    },
+                },
+                splitLine: {
+                    show: false
+                },
+                axisTick: {
+                    show: false
+                },
+                axisLine: {
+                    show: true,
+                    onZero: false, // X 轴或者 Y 轴的轴线是否在另一个轴的 0 刻度上，只有在另一个轴为数值轴且包含 0 刻度时有效。 为了可以向外移动Y轴，所以设为false
+                    symbol: "arrow",
+                    lineStyle: {
+                        color: 'rgb(74,184,243)',
+                        width: 2
+                    }
+                }
+            }, { // 右边的Y轴
+                type: 'category',
+                name: '(dB)',
+                nameLocation: 'start',
+                nameTextStyle: {
+                    color: '#fff',
+                    fontSize: 20
+                },
+                nameGap: -10,
+                inverse: true,
+                offset: 10,
+                axisTick: 'none',
+                axisLine: {
+                    show: false,
+                    onZero: true, // 上面设置了false这个Y轴会自动对其X轴的0刻度，会出现在左侧，为了是这个Y轴出现在右侧，onZero设为true，并设置onZeroAxisIndex属性
+                    onZeroAxisIndex: 1 // 当有双轴时，可以用这个属性手动指定，在哪个轴的 0 刻度上。
+                },
+                show: true,
+                splitLine: {
+                    show: false
+                },
+                axisLabel: {
+                    textStyle: {
+                        color: '#ffffff',
+                        fontSize: 14
+                    },
+                },
+                data: secondY
+            }
+            ],
+            tooltip: {
+                show: true,
+                trigger: 'item',
+                triggerOn: "mousemove",
+                backgroundColor: "rgba(0,51,102,0.5)",
+                borderWidth: 0.5,
+                textStyle: {
+                    fontSize: 14,
+                    color: '#fff'
+                },
+                formatter: function(params) {
+                    var s = '';
+                    if('value' in params){
+                        // 全程衰耗
+                        if(params.seriesName == "全程衰耗") {
+                            if(params.value[1] != null) {
+                                s += params.value[1] + '\n';
+                            }
+                            // 未测试说明A或D中至少有一个没有数据
+                            if(params.value[2] == '未测试') {
+                                // 两端都没有数据
+                                if(params.value[3] == '' && params.value[6] == '') {
+                                    s += "A： 未测试" + '\n';
+                                    s += "D： 未测试" + '\n';
+                                }else {
+                                    // A端无数据
+                                    if(params.value[3] == '') {
+                                        s += "A： 未测试" + '\n';
+                                        s += "D： " + params.value[6] + 'dB' +'\n';
+                                    }else if(params.value[6] == '') { // D端无数据
+                                        s += "A： " + params.value[3] + 'dB' + '\n';
+                                        s += "D： 未测试"  +'\n';
+                                    }
+                                }
+                            }else {
+                                // 只要ABCD端其中任意一端存在数据就不是空闲
+                                if(params.value[3] != '' || params.value[4] != '' || params.value[5] != '' || params.value[6] != ''){
+                                    if(params.value[2] != null) {
+                                        s += "全程衰耗： " + params.value[2] + 'dB' + '\n';
+                                    }
+                                }
+                            }
+                        }else {// 插入损耗
+                            if(params.value[1] != null) {
+                                s += params.value[1] + '\n';
+                            }
+                            // 测试过的  有数据的
+                            if(params.data.name != '未测试') {
+                                // 判断是A端（A-B）还是D端(C-D)
+                                if(params.value[5] == "A") {
+                                    if(params.value[3] != null) {
+                                        s += "A： " + params.value[3] + 'dB' + '\n';
+                                    }
+                                    if(params.value[4] != null) {
+                                        s += "B： " + params.value[4] + 'dB' + '\n';
+                                    }
+                                    if('name' in params) {
+                                        if(params.name != null) {
+                                            s += "A-B插入损耗： " + params.name + 'dB' + '\n';
+                                        }
+                                    }
+                                }else {
+                                    if(params.value[3] != null) {
+                                        s += "C： " + params.value[3] + 'dB' + '\n';
+                                    }
+                                    if(params.value[4] != null) {
+                                        s += "D： " + params.value[4] + 'dB' + '\n';
+                                    }
+                                    if('name' in params) {
+                                        if (params.name != null) {
+                                            s += "C-D插入损耗： " + params.name + 'dB' + '\n';
+                                        }
+                                    }
+                                }
+                            } else { // 未测试
+                                // 判断是A端（A-B）还是D端(C-D)
+                                if(params.value[5] == "A") {
+                                    // A、B端都未测试
+                                    if(params.data.value[3] == '' && params.data.value[4] == '') {
+                                        s += "A： 未测试" + '\n';
+                                        s += "B： 未测试" + '\n';
+                                    } else {
+                                        // A端未测试
+                                        if(params.data.value[3] == '') {
+                                            s += "A： 未测试" + '\n';
+                                            s += "B： " + params.data.value[4] + 'dB' + '\n';
+                                        } else if(params.data.value[4] == '') { // B端未测试
+                                            s += "A： " + params.data.value[3] + 'dB' + '\n';
+                                            s += "B： 未测试" + '\n';
+                                        }
+                                    }
+                                } else { // D端
+                                    // C、D端都未测试
+                                    if(params.data.value[3] == '' && params.data.value[4] == '') {
+                                        s += "C： 未测试" + '\n';
+                                        s += "D： 未测试" + '\n';
+                                    } else {
+                                        // C端未测试
+                                        if(params.data.value[3] == '') {
+                                            s += "C： 未测试" + '\n';
+                                            s += "D： " + params.data.value[4] + 'dB' + '\n';
+                                        } else if(params.data.value[4] == '') { // D端未测试
+                                            s += "C： " + params.data.value[3] + 'dB' + '\n';
+                                            s += "D： 未测试" + '\n';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return s;
+                },
+                // 换行
+                extraCssText: 'white-space:pre-wrap'
+            },
+            series: [
+                { // 柱状图的数据
+                    name: '全程衰耗',
+                    type: 'bar',
+                    zlevel: 1, // 值越高越显示在最上层
+                    itemStyle: {
+                        normal: {
+                            barBorderRadius: 30, // 柱子的圆角
+                            color: function(value) { // 根据数据来定制柱子的颜色
+                                if('data' in value) {
+                                    if(value.data[3] == "" &&  value.data[4] == "" && value.data[5] == "" && value.data[6] == "") {
+                                        // ABCD四的点都没有数据就为空闲
+                                        return new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                                            offset: 0,
+                                            color: root_computed.getPropertyValue('--free-color-dark').trim()
+                                        }, {
+                                            offset: 1,
+                                            color: root_computed.getPropertyValue('--free-color').trim()
+                                        }])
+                                    } else {
+                                        if (value.data[2] <= 6) { // 优质
+                                            return new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                                                offset: 0,
+                                                color: root_computed.getPropertyValue('--high-quality-color-dark').trim()
+                                                // color: 'rgb(57,89,255)'
+                                            }, {
+                                                offset: 1,
+                                                color: root_computed.getPropertyValue('--high-quality-color').trim()
+                                                // color: 'rgb(46,200,207)'
+                                            }])
+                                        } else if (value.data[2] <= 10) { // 合格
+                                            return new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                                                offset: 0,
+                                                color: root_computed.getPropertyValue('--qualified-color-dark').trim()
+                                            }, {
+                                                offset: 1,
+                                                color: root_computed.getPropertyValue('--qualified-color').trim()
+                                            }])
+                                        }else if (value.data[2] <= 14) { // 可用
+                                            return new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                                                offset: 0,
+                                                color: root_computed.getPropertyValue('--available-color-dark').trim()
+                                            }, {
+                                                offset: 1,
+                                                color: root_computed.getPropertyValue('--available-color').trim()
+                                            }])
+                                        }else if (value.data[2] > 14) { // 不可用
+                                            return new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                                                offset: 0,
+                                                color: root_computed.getPropertyValue('--not-available-color-dark').trim()
+                                            }, {
+                                                offset: 1,
+                                                color: root_computed.getPropertyValue('--not-available-color').trim()
+                                            }])
+                                        } else {
+                                            return new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                                                offset: 0,
+                                                color: root_computed.getPropertyValue('--not-tested-color-dark').trim()
+                                            }, {
+                                                offset: 1,
+                                                color: root_computed.getPropertyValue('--not-tested-color').trim()
+                                            }])
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    barWidth: 10, // 柱子的宽度
+                    markPoint: {
+                        symbol: 'arrow', // 箭头
+                        data: arrow, // 箭头数据
+                        symbolSize: 20 // 箭头大小
+                    },
+                    data: salvProValue
+                },{ // 柱状图的背景柱
+                    name: '背景',
+                    type: 'bar',
+                    tooltip: {
+                        show: false
+                    },
+                    barWidth: 10,
+                    barGap: '-100%', // 使两个柱子重叠
+                    itemStyle: {
+                        normal: {
+                            color: 'rgba(24,31,68,1)',
+                            barBorderRadius: 30,
+                        }
+                    },
+                    data: salvProMaxList, // 数据为X轴最大的数值
+                },{ // 衰耗点的A、B端
+                    name: 'scatterA_B',
+                    type: 'scatter',
+                    zlevel: 3,
+                    // symbol: 'image://./static/images/guang-circle.png',
+                    symbol: 'circle', // 点为圆形
+                    symbolSize: function(value) { // 根据数据来定制节点的大小
+                        if(value != null || value != undefined) {
+                            if (value[2] == 1) { // 不合格
+                                return 22
+                            } else {
+                                return 16
+                            }
+                        }
+                    },
+                    data: decayPointListA_B
+                },{ // 衰耗点C、D端
+                    name: 'scatterC_D',
+                    type: 'scatter',
+                    zlevel: 3,
+                    // symbol: 'image://./static/images/guang-circle.png',
+                    symbol: 'circle',
+                    symbolSize: function(value) {
+                        // 判断该衰耗点合不合格，从而定义该点的大小
+                        if(value != null || value != undefined) {
+                            if (value[2] == 1) { // 不合格
+                                return 22
+                            } else {
+                                return 16
+                            }
+                        }
+                    },
+                    data: decayPointListC_D
+                },{ // X轴的各个标签文本（在最下面的Y轴和X轴制作4个点，坐标分别为（0，最下面的Y）、（最大X的1/3，最下面的Y）、（最大X的2/3，最下面的Y），（最大的X，最下面的Y））
+                    name: 'XTitle',
+                    type: 'scatter',
+                    zlevel: 2,
+                    // symbol: 'image://./static/images/guang-circle.png',
+                    symbol: 'circle',
+                    symbolSize: 1, // 为0则显示不出来文本标签
+                    itemStyle: {
+                        color: 'rgba(255, 255, 255, 0)' // 让节点透明
+                    },
+                    tooltip: {
+                        show: false
+                    },
+                    data: XTitle
+                },{ // X轴的各个标签文本（在最下面的Y轴和X轴制作4个点，坐标分别为（0，最下面的Y）、（最大X的1/3，最下面的Y）、（最大X的2/3，最下面的Y），（最大的X，最下面的Y））
+                    name: 'XTitleTop',
+                    type: 'scatter',
+                    zlevel: 2,
+                    // symbol: 'image://./static/images/guang-circle.png',
+                    symbol: 'circle',
+                    symbolSize: 1, // 为0则显示不出来文本标签
+                    itemStyle: {
+                        color: 'rgba(255, 255, 255, 0)' // 让节点透明
+                    },
+                    tooltip: {
+                        show: false
+                    },
+                    data: XTitleTop
+                }
+            ]
+        };
+
+        myChart.setOption(option);
+        window.onresize = myChart.resize;
+    }
+
+</script>

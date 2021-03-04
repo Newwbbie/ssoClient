@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>组网与aau设备关系</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+    <link rel="stylesheet" href="/layuiDemo/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/layuiDemo/style/admin.css" media="all">
+    <link rel="stylesheet" href="/easyui-1.7/themes/material/easyui.css">
+    <link rel="stylesheet" href="/easyui-1.7/themes/icon.css">
+    <link href="/css/searchableSelect.css" rel="stylesheet">
+    <style>
+        /*超出则显示滚动条*/
+        .layui-form-select dl { max-height:500px; }
+    </style>
+</head>
+<body>
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-row" style="padding: 0px;">
+                <div class="layui-col-xs3">
+                    <label class="layui-form-label">所属组网</label>
+                    <div class="layui-input-block">
+                        <select id="sysId">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-card-body">
+            <div style="padding-bottom: 10px;">
+                <button class="layui-btn layui-btn-normal" type="button" onclick="que()">查询</button>
+            </div>
+
+            <table id="dg"></table>
+        </div>
+    </div>
+
+</div>
+
+<script src="/js/jquery-3.1.1.min.js"></script>
+<script src="/layuiDemo/layui/layui.js"></script>
+<script type="text/javascript" src="/easyui-1.7/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="/easyui-1.7/locale/easyui-lang-zh_CN.js"></script>
+<script src="/js/searchableSelect.js"></script>
+
+<script>
+
+    $(window).resize(function () {
+        $('#dg').datagrid('resize');
+    });
+
+    $(function() {
+        // 查询
+        que();
+        // 想要使用layui的下拉框就要加载form模块
+        layui.use('form', function(){
+            var form = layui.form;
+        });
+
+    });
+
+    // 查询所有的组网id和名称
+    selAllSysIdName();
+    // 渲染搜索下拉框
+    $('#sysId').searchableSelect();
+
+    // 查询所有的组网id和名称
+    function selAllSysIdName() {
+        var sysId = $("#sysId");
+        $.ajax({
+            url: "/sys/selAllSysIdName",
+            type: 'post',
+            dataType: 'json',
+            async: false,
+            success: function (data) {
+                $.each(data, function (index, stt) {
+                    sysId.append("<option value=" + stt.SYS_ID + ">" + stt.SYS_NAME + "</option>");
+                });
+            }
+        });
+    }
+
+
+    // 查询
+    function que() {
+        var obj = {
+            sysId : $("#sysId option:selected").val()
+        };
+        $('#dg').datagrid({
+            url: "/sysToAau/querySysToAau",
+            striped: true, 		// 奇偶行使用不同背景色
+            pagination: true,	// 分页工具栏
+            rownumbers: true,	// 初始化页码
+            pageSize: 20,
+            pageList: [10,20,30,40,50],
+            singleSelect: true,	// 单选
+            fitColumns: false,	// 自适应表格宽度
+            height: window.innerHeight - 121 - $('.layui-card-header').height(),
+            sync: false,
+            queryParams: obj,
+            method: "post",
+            // 实现选择单行，取消单行
+            onBeforeSelect: function(index, row){
+                var row = $('#dg').datagrid('getSelected');
+                var curRowindex = $('#dg').datagrid('getRowIndex',row);
+                if(curRowindex != index) {return true;}
+                else{ $('#dg').datagrid('unselectRow',index); return false;}
+            },
+            onLoadSuccess: function(data) {
+                $('#dg').datagrid('resize');
+            },
+            columns: [ [
+                {field: 'ID', title: '主键id', align: 'center', checkbox: true},
+                {field: 'SYS_ID', title: '组网系统', align: 'center',width: '15%'},
+                {field: 'AAU_ID', title: 'aau设备', align: 'center',width: '15%'},
+                {field: 'CREATE_OP', title: '创建人', align: 'center',width: '10%'},
+                {field: 'CREATE_DATE', title: '创建时间', align: 'center',width: '15%'}
+            ] ],
+            onloadSuccsee: function (data) {
+                $("#dg").datagrid('resize');
+            }
+        });
+    }
+
+    window.addEventListener("resize", function() {
+        $('#dg').datagrid({
+            height: window.innerHeight - 121 - $('.layui-card-header').height()
+        });
+    });
+</script>
+</body>
+</html>

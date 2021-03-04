@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>组网采集数据管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <link rel="stylesheet" href="../../lib/easyui-1.7/themes/material/easyui.css">
+    <link rel="stylesheet" href="../../lib/easyui-1.7/themes/icon.css">
+    <link rel="stylesheet" href="../../css/searchableSelect.css">
+    <style>
+        /*超出则显示滚动条*/
+        .layui-form-select dl { max-height:500px; }
+
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+
+        <div class="layui-form-item layui-form-pane">
+            <div class="layui-inline">
+                <label class="layui-form-label">所属组网</label>
+                <div class="layui-input-inline">
+                    <select id="sysId">
+                        <option value="">请选择</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline layui-form">
+                <label class="layui-form-label">采集位置</label>
+                <div class="layui-input-inline">
+                    <select id="collectPosition" lay-verify="required">
+                        <option value=""></option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="layui-btn layui-btn-normal" style="margin-bottom: 10px;" onclick="que()">查询</button>
+
+        <table id="dg"></table>
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../js/lay-config.js" charset="utf-8"></script>
+<script src="../../js/public.js" charset="utf-8"></script>
+<script src="../../lib/easyui-1.7/jquery.easyui.min.js"></script>
+<script src="../../lib/easyui-1.7/locale/easyui-lang-zh_CN.js"></script>
+<script src="../../js/searchableSelect.js"></script>
+<script>
+
+    $(window).resize(function () {
+        $('#dg').datagrid('resize');
+    });
+
+    // 想要使用layui的下拉框就要加载form模块
+    layui.use('form', function(){
+        var form = layui.form;
+    });
+    // 查询所有的组网id和名称
+    selAllSysIdName();
+    // 查询组网采集的数据
+    que();
+
+
+    // 查询所有的组网id和名称
+    function selAllSysIdName() {
+        var url = fiveGApi + "/sys/selAllSysIdName";
+        mGET(url, function (d) {
+            $.each(d.data, function (index, stt) {
+                $('#sysId').append("<option value=" + stt.SYS_ID + ">" + stt.SYS_NAME + "</option>");
+            });
+            // 渲染搜索下拉框
+            $('#sysId').searchableSelect();
+        });
+    }
+
+    // 查询组网采集的数据
+    function que() {
+        var url = fiveGApi + "/collectionData/queryCollectionData";
+        var data = {
+            sysId : $("#sysId option:selected").val(),
+            collectPosition : $("#collectPosition option:selected").val()
+        };
+        var cols = [[
+            {field: 'ID', title: 'ID', align: 'center', checkbox: true},
+            {field: 'SYS_ID', title: '所属组网', align: 'center',width: '18%'},
+            {field: 'COLLECT_POSITION', title: '采集位置', align: 'center',width: '5%'},
+            {field: 'WAVE_LENGTH', title: '波长(nm)', align: 'center',width: '5%'},
+            {field: 'COLLECT_VALUE', title: '波长数据(dBm)', align: 'center',width: '8%'},
+            {field: 'LON', title: '上传段经度', align: 'center',width: '15%'},
+            {field: 'LAT', title: '上传段纬度', align: 'center',width: '15%'},
+            {field: 'CREATE_OP', title: '采集人', align: 'center',width: '8%'},
+            {field: 'CREATE_DATE', title: '采集日期', align: 'center',width: '15%'},
+            {field: 'REMARK', title: '描述', align: 'center',width: '10%'}
+        ]];
+        mDatagrid("#dg", url, data, cols);
+    }
+
+</script>
+</body>
+</html>

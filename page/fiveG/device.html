@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>5G设备管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <link rel="stylesheet" href="../../lib/easyui-1.7/themes/material/easyui.css">
+    <link rel="stylesheet" href="../../lib/easyui-1.7/themes/icon.css">
+    <link rel="stylesheet" href="../../css/searchableSelect.css">
+    <style>
+        /*超出则显示滚动条*/
+        .layui-form-select dl { max-height:500px; }
+
+        .see_networking {
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        
+        <div class="layui-form-item layui-form-pane">
+            <div class="layui-row" style="padding: 0px;">
+                <div class="layui-inline">
+                    <label class="layui-form-label">所属组网</label>
+                    <div class="layui-input-inline">
+                        <select id="sys">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-form layui-inline">
+                    <label class="layui-form-label">设备名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="deviceName" placeholder="请输入设备名称" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form layui-inline">
+                    <label class="layui-form-label">规格</label>
+                    <div class="layui-input-inline">
+                        <select id="specification" lay-verify="required">
+                            <option value=""></option>
+                            <option value="6合一">6合一</option>
+                            <option value="12合一">12合一</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-form layui-inline">
+                    <label class="layui-form-label">类型</label>
+                    <div class="layui-input-inline">
+                        <select id="type" lay-verify="required">
+                            <option value=""></option>
+                            <option value="1">分波器</option>
+                            <option value="2">合波器</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding-bottom: 10px;">
+            <button type="button" class="layui-btn" onclick="add()">添加</button>
+            <button type="button" class="layui-btn layui-btn-danger" onclick="del()">删除</button>
+            <button type="button" class="layui-btn layui-btn-warm" onclick="upd()">修改</button>
+            <button type="button" class="layui-btn layui-btn-normal" onclick="que()">查询</button>
+        </div>
+
+        <table id="dg"></table>
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../js/lay-config.js" charset="utf-8"></script>
+<script src="../../js/public.js" charset="utf-8"></script>
+<script src="../../lib/easyui-1.7/jquery.easyui.min.js"></script>
+<script src="../../lib/easyui-1.7/locale/easyui-lang-zh_CN.js"></script>
+<script src="../../js/searchableSelect.js"></script>
+<script>
+
+    $(window).resize(function () {
+        $('#dg').datagrid('resize');
+    });
+
+    // 想要使用layui的下拉框就要加载form模块
+    layui.use('form', function(){
+        var form = layui.form;
+    });
+
+    // 查询所有的组网id和名称
+    selAllSysIdName();
+    // 查询5G设备
+    que();
+
+    // 查询所有组网系统的id好名称
+    function selAllSysIdName() {
+        var url = fiveGApi + "/sys/selAllSysIdName";
+        mGET(url, function (d) {
+            $.each(d.data, function (index, stt) {
+                $('#sys').append("<option value=" + stt.SYS_ID + ">" + stt.SYS_NAME + "</option>");
+            });
+            // 渲染搜索下拉框
+            $('#sys').searchableSelect();
+        });
+    }
+
+    // 查询5G设备信息
+    function que() {
+        var url = fiveGApi + "/device/queryDevice";
+        var data = {
+            sys : $("#sys option:selected").val(),
+            deviceName : $('#deviceName').val(),
+            specification : $("#specification option:selected").val(),
+            type : $("#type option:selected").val()
+        };
+        var cols = [[
+            {field: 'DEVICE_ID', title: '设备id', align: 'center', checkbox: true},
+            {field: 'DEVICE_NAME', title: '设备名称', align: 'center', width: '15%'},
+            {field: 'DEVICE_NO', title: '设备编码', align: 'center', width: '10%'},
+            {field: 'SPECIFICATION', title: '规格', align: 'center', width: '7%'},
+            {field: 'LONGITUDE', title: '经度', align: 'center', width: '15%'},
+            {field: 'LATITUDE', title: '纬度', align: 'center', width: '15%'},
+            {field: 'TYPE', title: '类型', align: 'center', width: '5%'},
+            {field: 'CREATE_OP', title: '创建人', align: 'center', width: '8%'},
+            {field: 'CREATE_DATE', title: '创建日期', align: 'center', width: '15%'},
+            {field: 'operation',title: '操作', align: 'center', width: '8%',
+                formatter: function (value, row, index) {
+                    return "<a class='see_networking layui-btn layui-btn-xs' onclick='seeNetwork(" + row.DEVICE_ID + ")' type='button'>所属组网</a>";
+                }
+            }
+        ]];
+        mDatagrid("#dg", url, data, cols);
+    }
+
+    // 添加
+    function add() {
+        layui.use('layer', function () {
+            layer.open({
+                type: 2,
+                area:['400px', '540px'],
+                maxmin: true,
+                // skin:'layui-layer-molv',
+                title: ['添加'],
+                content: 'device_add.html'
+            });
+        });
+    }
+
+    // 删除
+    function del() {
+        var row = $('#dg').datagrid('getSelected');
+        if (row == null) {
+            layer.msg('请选择一条数据');
+            return;
+        }
+
+        layer.confirm('确定删除吗？', {
+            btn : ['确定','取消'],
+            btn1 : function(){
+                var url = fiveGApi + "/device/delDeviceById";
+                var data = {
+                    deviceId : row.DEVICE_ID
+                };
+                mAjax(data, url, 'DELETE', function (d) {
+                    if (d.success == true) {
+                        layer.msg('删除成功');
+                    } else {
+                        layer.msg('删除失败');
+                    }
+                    que();
+                });
+            }
+        });
+    }
+
+    // 修改
+    function upd() {
+        var row = $('#dg').datagrid('getSelected');
+        if (row == null) {
+            layer.msg('请选择一条数据');
+            return;
+        }
+        layer.open({
+            type: 2,
+            area:['400px', '540px'],
+            maxmin: true,
+            // skin:'layui-layer-molv',
+            title: ['【修改】'],
+            content: 'device_upd.html',
+            success: function(layero, index) {
+                var iframeWin = window[layero.find('iframe')[0]['name']];
+                var url = fiveGApi + '/device/updDeviceView?deviceId=' + row.DEVICE_ID;
+                mGET(url, function (d) {
+                    iframeWin.init(d.data);
+                })
+            }
+        });
+    }
+
+    // 查看所属组网信息
+    function seeNetwork(obj) {
+        var url = fiveGApi + '/sys/selSysId?waveDeviceId=' + obj;
+        mGET(url, function (d) {
+            if(d.data == ""){
+                layer.msg('该设备暂无所属组网！');
+            }else {
+                // 在iframe中打开一个新页面 show_sys
+                url = fiveGApi + '/sys/showSysData?sysId=' + d.data;
+                mGET(url, function (d) {
+                    localStorage.setItem("sysId", d.sysId);
+                    localStorage.setItem("specification", d.specification);
+                    toTab = "page/fiveG/show_sys.html"
+                    window.parent.layui.element.tabAdd('layuiminiTab', {
+                        id: toTab,
+                        title: "5G组网数据展示",
+                        content: '<iframe src="page/fiveG/show_sys.html" width="100%" height="100%" frameborder="no" border="0" marginwidth="0" marginheight="0"></iframe>'
+                    });
+                    window.parent.layui.element.tabChange('layuiminiTab', toTab);
+                })
+            }
+        });
+    }
+</script>
+</body>
+</html>
